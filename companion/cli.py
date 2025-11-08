@@ -121,6 +121,11 @@ def main(ctx: click.Context) -> None:
 
     Run without commands to start writing a new entry.
     """
+    # Configure logging to suppress verbose messages
+    logging.basicConfig(level=logging.ERROR, format='%(message)s')
+    logging.getLogger("transformers").setLevel(logging.ERROR)
+    logging.getLogger("torch").setLevel(logging.ERROR)
+
     # Run first-time setup if needed
     _first_run_wizard()
 

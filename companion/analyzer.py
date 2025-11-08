@@ -50,15 +50,22 @@ Your response (one word only):"""
         response_clean = response.strip().lower()
 
         # Extract sentiment word even if model adds extra text
-        if "positive" in response_clean:
+        # Check first for exact matches (most reliable)
+        first_word = response_clean.split()[0] if response_clean.split() else ""
+
+        if first_word in ["positive", "negative", "neutral"]:
+            sentiment_label = first_word
+        # Fall back to substring search
+        elif "positive" in response_clean:
             sentiment_label = "positive"
         elif "negative" in response_clean:
             sentiment_label = "negative"
         elif "neutral" in response_clean:
             sentiment_label = "neutral"
+        # Use keyword-based fallback if AI gives unusable response
         else:
-            logger.warning("Unexpected sentiment response: %s, defaulting to neutral", response_clean)
-            sentiment_label = "neutral"
+            logger.debug("AI response unclear: %s, using keyword fallback", response_clean[:50])
+            sentiment_label = _fallback_sentiment_detection(text)
 
         confidence = _estimate_confidence(text, sentiment_label)
 
@@ -316,3 +323,41 @@ async def _analyze_single_entry(entry: JournalEntry) -> JournalEntry:
     entry.themes = [t.name for t in themes]
 
     return entry
+
+
+def _fallback_sentiment_detection(text: str) -> str:
+    """Keyword-based sentiment detection as fallback.
+    
+    Used when AI response is unclear or invalid.
+    
+    Args:
+        text: Journal entry text
+        
+    Returns:
+        Sentiment label based on keyword matching
+    """
+    text_lower = text.lower()
+    
+    positive_keywords = [
+        "happy", "great", "good", "wonderful", "excellent", "amazing",
+        "fantastic", "excited", "joy", "love", "grateful", "thankful",
+        "accomplished", "success", "proud", "breakthrough", "energized",
+        "hopeful", "optimistic", "pleased", "satisfied", "delighted"
+    ]
+    
+    negative_keywords = [
+        "sad", "terrible", "awful", "bad", "hate", "angry", "frustrated",
+        "disappointed", "upset", "depressed", "anxious", "stressed", "worried",
+        "failed", "failure", "wrong", "horrible", "miserable", "unhappy",
+        "difficult", "hard", "struggle", "pain", "hurt"
+    ]
+    
+    pos_count = sum(1 for word in positive_keywords if word in text_lower)
+    neg_count = sum(1 for word in negative_keywords if word in text_lower)
+    
+    if pos_count > neg_count and pos_count > 0:
+        return "positive"
+    elif neg_count > pos_count and neg_count > 0:
+        return "negative"
+    else:
+        return "neutral"
