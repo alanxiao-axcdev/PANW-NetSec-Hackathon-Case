@@ -45,29 +45,35 @@ class MockProvider(AIProvider):
         logger.info("MockProvider initialized")
 
     async def generate(self, prompt: str, max_tokens: int = 100) -> str:
-        """Generate mock text response.
+        """Generate mock text response with basic content analysis.
 
         Args:
             prompt: Input prompt (used to select response)
             max_tokens: Ignored for mock provider
 
         Returns:
-            Hardcoded mock response based on prompt content
+            Mock response based on prompt content and entry text analysis
 
         Raises:
             ValueError: If prompt is empty
         """
         if not prompt:
-            raise ValueError("Prompt cannot be empty")
+            msg = "Prompt cannot be empty"
+            raise ValueError(msg)
 
-        # Return appropriate mock response based on prompt keywords
-        if "prompt" in prompt.lower() or "reflect" in prompt.lower():
+        prompt_lower = prompt.lower()
+
+        # Sentiment analysis - actually analyze the text in the prompt
+        if "sentiment" in prompt_lower:
+            response = self._analyze_sentiment_from_prompt(prompt)
+        # Theme extraction - detect themes from text
+        elif "theme" in prompt_lower or "topic" in prompt_lower:
+            response = self._extract_themes_from_prompt(prompt)
+        # Prompt generation
+        elif "prompt" in prompt_lower or "question" in prompt_lower or "reflect" in prompt_lower:
             response = self.responses["generate_prompt"]
-        elif "sentiment" in prompt.lower() or "emotion" in prompt.lower():
-            response = self.responses["analyze_sentiment"]
-        elif "theme" in prompt.lower() or "topic" in prompt.lower():
-            response = self.responses["extract_themes"]
-        elif "summary" in prompt.lower():
+        # Summary
+        elif "summary" in prompt_lower:
             response = self.responses["generate_summary"]
         else:
             response = "Mock response for testing purposes"
@@ -75,6 +81,68 @@ class MockProvider(AIProvider):
         self.last_inference_time = 1.0  # Simulate 1ms inference
         logger.debug("MockProvider generated: %s", response[:50])
         return response
+
+    def _analyze_sentiment_from_prompt(self, prompt: str) -> str:
+        """Analyze sentiment based on keywords in the entry text.
+
+        Extracts the journal entry from the prompt and does keyword matching.
+        """
+        # Common negative keywords
+        negative_words = [
+            "terrible", "awful", "bad", "hate", "angry", "sad", "frustrated",
+            "disappointed", "upset", "depressed", "anxious", "stressed", "worried",
+            "failed", "failure", "wrong", "horrible", "miserable"
+        ]
+
+        # Common positive keywords
+        positive_words = [
+            "great", "good", "happy", "excellent", "wonderful", "amazing",
+            "fantastic", "excited", "joy", "love", "grateful", "thankful",
+            "accomplished", "success", "proud", "breakthrough", "energized"
+        ]
+
+        prompt_lower = prompt.lower()
+
+        # Count sentiment words
+        neg_count = sum(1 for word in negative_words if word in prompt_lower)
+        pos_count = sum(1 for word in positive_words if word in prompt_lower)
+
+        # Determine sentiment
+        if neg_count > pos_count and neg_count > 0:
+            return "negative"
+        elif pos_count > neg_count and pos_count > 0:
+            return "positive"
+        else:
+            return "neutral"
+
+    def _extract_themes_from_prompt(self, prompt: str) -> str:
+        """Extract themes based on keywords in the entry text."""
+        prompt_lower = prompt.lower()
+        themes = []
+
+        # Theme keywords
+        if any(word in prompt_lower for word in ["work", "job", "project", "meeting", "deadline", "boss"]):
+            themes.append("work")
+        if any(word in prompt_lower for word in ["family", "mom", "dad", "sister", "brother", "parent"]):
+            themes.append("relationships")
+        if any(word in prompt_lower for word in ["exercise", "run", "gym", "health", "workout"]):
+            themes.append("health")
+        if any(word in prompt_lower for word in ["friend", "social", "party", "hangout"]):
+            themes.append("social")
+        if any(word in prompt_lower for word in ["stress", "anxiety", "worry", "pressure"]):
+            themes.append("stress")
+        if any(word in prompt_lower for word in ["grateful", "thankful", "appreciate", "blessing"]):
+            themes.append("gratitude")
+        if any(word in prompt_lower for word in ["learn", "study", "read", "course", "education"]):
+            themes.append("learning")
+        if any(word in prompt_lower for word in ["creative", "art", "music", "write", "create"]):
+            themes.append("creativity")
+
+        # Default if nothing detected
+        if not themes:
+            themes = ["personal", "reflection"]
+
+        return ", ".join(themes)
 
     async def embed(self, text: str) -> list[float]:
         """Generate mock embedding vector.
@@ -89,7 +157,8 @@ class MockProvider(AIProvider):
             ValueError: If text is empty
         """
         if not text:
-            raise ValueError("Text cannot be empty")
+            msg = "Text cannot be empty"
+            raise ValueError(msg)
 
         # Generate deterministic embedding based on text length
         # Use simple hash-based approach for consistency

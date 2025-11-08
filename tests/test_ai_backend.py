@@ -52,11 +52,12 @@ class TestMockProvider:
 
     @pytest.mark.asyncio
     async def test_generate_with_sentiment_keyword(self, provider):
-        """Generate detects sentiment keywords."""
+        """Generate analyzes sentiment based on text content."""
         await provider.initialize()
 
-        result = await provider.generate("Analyze sentiment of this text")
-        assert "positive" in result.lower() or "sentiment" in result.lower()
+        # Test returns valid sentiment label based on content
+        result = await provider.generate("Analyze sentiment of this neutral text")
+        assert result.lower() in ["positive", "neutral", "negative"]
 
     @pytest.mark.asyncio
     async def test_generate_empty_prompt_raises(self, provider):
