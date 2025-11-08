@@ -3,8 +3,7 @@
 import pytest
 
 from companion import analyzer
-from companion.models import JournalEntry
-from companion.models import Sentiment
+from companion.models import JournalEntry, Sentiment
 
 
 @pytest.mark.asyncio

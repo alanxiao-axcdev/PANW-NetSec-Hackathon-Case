@@ -2,11 +2,7 @@
 
 import pytest
 
-from companion.ai_backend import AIProvider
-from companion.ai_backend import MockProvider
-from companion.ai_backend import OllamaProvider
-from companion.ai_backend import OpenAIProvider
-from companion.ai_backend import QwenProvider
+from companion.ai_backend import AIProvider, MockProvider, OllamaProvider, OpenAIProvider, QwenProvider
 from companion.models import ProviderHealth
 
 

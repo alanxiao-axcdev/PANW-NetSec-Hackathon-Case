@@ -1,24 +1,24 @@
 """Tests for data models."""
 
-from datetime import date
-from datetime import datetime
-from datetime import timedelta
+from datetime import date, timedelta
 from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
-from companion.models import AnalysisResult
-from companion.models import Config
-from companion.models import HealthStatus
-from companion.models import InjectionRisk
-from companion.models import JournalEntry
-from companion.models import PIIMatch
-from companion.models import PoisoningRisk
-from companion.models import ProviderHealth
-from companion.models import Sentiment
-from companion.models import Summary
-from companion.models import Theme
+from companion.models import (
+    AnalysisResult,
+    Config,
+    HealthStatus,
+    InjectionRisk,
+    JournalEntry,
+    PIIMatch,
+    PoisoningRisk,
+    ProviderHealth,
+    Sentiment,
+    Summary,
+    Theme,
+)
 
 
 class TestSentiment:
@@ -41,7 +41,7 @@ class TestSentiment:
         # Valid
         Sentiment(label="positive", confidence=0.0)
         Sentiment(label="positive", confidence=1.0)
-        
+
         # Invalid
         with pytest.raises(ValidationError):
             Sentiment(label="positive", confidence=1.5)
@@ -132,7 +132,7 @@ class TestAnalysisResult:
         """Test minimal analysis result."""
         sentiment = Sentiment(label="neutral", confidence=0.5)
         theme = Theme(name="general", confidence=0.6)
-        
+
         result = AnalysisResult(
             entry_id="test-123",
             sentiment=sentiment,
@@ -149,7 +149,7 @@ class TestAnalysisResult:
             Theme(name="work", confidence=0.9),
             Theme(name="achievement", confidence=0.75),
         ]
-        
+
         result = AnalysisResult(
             entry_id="test-456",
             sentiment=sentiment,
@@ -168,7 +168,7 @@ class TestSummary:
         """Test weekly summary creation."""
         today = date.today()
         week_ago = today - timedelta(days=7)
-        
+
         summary = Summary(
             period="week",
             start_date=week_ago,

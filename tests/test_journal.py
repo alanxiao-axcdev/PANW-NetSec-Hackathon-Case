@@ -1,17 +1,13 @@
 """Tests for journal module."""
 
 import tempfile
-from datetime import date
-from datetime import datetime
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pytest
 
 from companion import journal
-from companion.config import load_config
 from companion.models import JournalEntry
-from companion.models import Sentiment
 
 
 @pytest.fixture

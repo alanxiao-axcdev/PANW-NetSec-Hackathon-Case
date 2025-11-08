@@ -1,15 +1,11 @@
 """Tests for summarizer module."""
 
-from datetime import date
-from datetime import datetime
-from datetime import timedelta
+from datetime import date, datetime
 
 import pytest
 
 from companion import summarizer
-from companion.models import JournalEntry
-from companion.models import Sentiment
-from companion.models import Summary
+from companion.models import JournalEntry, Sentiment, Summary
 
 
 @pytest.mark.asyncio
