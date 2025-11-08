@@ -12,10 +12,12 @@ from datetime import date, datetime, timedelta
 import click
 from rich.console import Console
 from rich.panel import Panel
+from rich.prompt import Prompt
 
 from companion import analyzer, config, journal, summarizer
 from companion.models import JournalEntry
 from companion.monitoring import dashboard, health
+from companion.security.audit import decrypt_audit_log, verify_audit_log_integrity
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -499,6 +501,81 @@ def rotate_keys_cmd() -> None:
         if len(result.errors) > 5:
             console.print(f"  ... and {len(result.errors) - 5} more errors")
         sys.exit(1)
+
+
+@main.command()
+@click.option('--decrypt', is_flag=True, help='Decrypt and view audit log')
+@click.option('--verify', is_flag=True, help='Verify audit log integrity')
+@click.option('--limit', default=20, help='Number of recent events to display')
+def audit(decrypt: bool, verify: bool, limit: int) -> None:
+    """View security audit log.
+
+    Encrypted audit logs require passphrase for viewing or verification.
+    """
+    cfg = config.load_config()
+    audit_file = cfg.data_directory / "audit.log"
+
+    if not audit_file.exists():
+        console.print("[yellow]No audit log found[/yellow]")
+        return
+
+    if verify:
+        passphrase = Prompt.ask("Enter passphrase", password=True)
+        console.print("\n[cyan]Verifying audit log integrity...[/cyan]")
+
+        integrity_ok, tampered = verify_audit_log_integrity(audit_file, passphrase)
+
+        if integrity_ok:
+            console.print("[green]✓ Audit log integrity verified - no tampering detected[/green]\n")
+        else:
+            console.print("[red]⚠️  TAMPERING DETECTED![/red]")
+            console.print("\nCompromised entries:")
+            for entry in tampered:
+                console.print(f"  [red]- {entry}[/red]")
+            console.print()
+        return
+
+    if decrypt:
+        passphrase = Prompt.ask("Enter passphrase", password=True)
+        console.print("\n[cyan]Decrypting audit log...[/cyan]\n")
+
+        events = decrypt_audit_log(audit_file, passphrase)
+
+        if not events:
+            console.print("[yellow]No audit events found or decryption failed[/yellow]")
+            return
+
+        console.print(f"[bold cyan]Security Audit Log[/bold cyan] (Last {limit} events)\n")
+        console.print("─" * 80)
+
+        # Display last N events
+        for event in events[-limit:]:
+            timestamp = event.get('timestamp', 'unknown')[:19]  # Strip timezone
+            event_type = event.get('event_type', 'unknown').upper()
+
+            # Format based on event type
+            if event_type == 'MODEL_INFERENCE':
+                duration = event.get('duration_ms', 0)
+                model = event.get('model_name', 'unknown')
+                console.print(f"[cyan]{timestamp}[/cyan]  {event_type:20s}  Duration: {duration:.1f}ms  Model: {model}")
+            elif event_type == 'DATA_ACCESS':
+                operation = event.get('operation', 'unknown')
+                entry_count = event.get('entry_count', 0)
+                console.print(f"[cyan]{timestamp}[/cyan]  {event_type:20s}  {operation}: {entry_count} entries")
+            elif event_type == 'SECURITY_EVENT':
+                subtype = event.get('subtype', 'unknown')
+                severity = event.get('severity', 'info')
+                severity_color = {'info': 'green', 'warning': 'yellow', 'error': 'red', 'critical': 'red bold'}.get(severity, 'white')
+                console.print(f"[cyan]{timestamp}[/cyan]  {event_type:20s}  [{severity_color}]{subtype}[/{severity_color}]")
+            else:
+                console.print(f"[cyan]{timestamp}[/cyan]  {event_type}")
+
+        console.print("─" * 80)
+        console.print(f"\n[dim]Total events: {len(events)}[/dim]\n")
+        return
+
+    # Default: show plaintext audit log if not encrypted
+    console.print("\n[yellow]Use --decrypt to view encrypted logs or --verify to check integrity[/yellow]\n")
 
 
 @main.command()

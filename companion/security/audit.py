@@ -5,12 +5,16 @@ and data access operations. Logs are tamper-evident and can be used
 for compliance and forensic analysis.
 """
 
+import base64
 import hashlib
+import hmac
 import json
 import logging
 from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
+
+from companion.security.encryption import decrypt_entry, encrypt_entry
 
 logger = logging.getLogger(__name__)
 
@@ -344,3 +348,183 @@ def generate_audit_report(
         "event_counts": event_counts,
         "total_inference_time_ms": total_inference_time_ms,
     }
+
+
+def log_event_encrypted(
+    event_type: str,
+    details: dict[str, Any],
+    passphrase: str,
+    audit_file: Path,
+) -> None:
+    """Log security event with encryption and integrity protection.
+
+    Encrypts event data using AES-256-GCM and adds HMAC-SHA256 for integrity verification.
+    Creates append-only log entries that can detect tampering.
+
+    Args:
+        event_type: Type of security event (e.g., "model_inference", "data_access")
+        details: Event-specific details to be encrypted
+        passphrase: Encryption passphrase
+        audit_file: Path to audit log file
+
+    Example:
+        >>> log_event_encrypted(
+        ...     event_type="security_event",
+        ...     details={"action": "passphrase_changed"},
+        ...     passphrase="secure123",
+        ...     audit_file=Path("audit.log")
+        ... )
+    """
+    # Create event
+    event = {
+        "timestamp": datetime.now(tz=UTC).isoformat(),
+        "event_type": event_type,
+        **details,
+    }
+
+    # Encrypt event
+    event_json = json.dumps(event, ensure_ascii=False)
+    encrypted = encrypt_entry(event_json, passphrase)
+
+    # Generate HMAC for integrity
+    integrity_hash = hmac.new(
+        passphrase.encode("utf-8"),
+        encrypted,
+        hashlib.sha256,
+    ).hexdigest()
+
+    # Create log entry
+    log_entry = {
+        "timestamp": event["timestamp"],
+        "encrypted_event": base64.b64encode(encrypted).decode("ascii"),
+        "integrity_hash": integrity_hash,
+    }
+
+    # Ensure directory exists
+    audit_file.parent.mkdir(parents=True, exist_ok=True)
+
+    # Append to file
+    with audit_file.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(log_entry, ensure_ascii=False) + "\n")
+        f.flush()
+
+    logger.debug("Logged encrypted event: %s", event_type)
+
+
+def verify_audit_log_integrity(
+    audit_file: Path,
+    passphrase: str,
+) -> tuple[bool, list[str]]:
+    """Verify audit log hasn't been tampered with.
+
+    Checks HMAC-SHA256 integrity hash for each entry to detect modifications.
+
+    Args:
+        audit_file: Path to encrypted audit log
+        passphrase: Passphrase used for encryption/integrity
+
+    Returns:
+        Tuple of (integrity_ok, list_of_tampered_entries)
+        - integrity_ok: True if no tampering detected
+        - list_of_tampered_entries: List of line numbers/timestamps that failed verification
+
+    Example:
+        >>> integrity_ok, tampered = verify_audit_log_integrity(
+        ...     Path("audit.log"),
+        ...     "secure123"
+        ... )
+        >>> integrity_ok
+        True
+    """
+    if not audit_file.exists():
+        return True, []
+
+    tampered = []
+
+    with audit_file.open("r", encoding="utf-8") as f:
+        for line_num, line in enumerate(f, 1):
+            if not line.strip():
+                continue
+
+            try:
+                entry = json.loads(line)
+                encrypted = base64.b64decode(entry["encrypted_event"])
+                expected_hash = entry["integrity_hash"]
+
+                # Recompute HMAC
+                actual_hash = hmac.new(
+                    passphrase.encode("utf-8"),
+                    encrypted,
+                    hashlib.sha256,
+                ).hexdigest()
+
+                if actual_hash != expected_hash:
+                    tampered.append(f"Line {line_num}: {entry.get('timestamp', 'unknown')}")
+
+            except (json.JSONDecodeError, KeyError, ValueError) as e:
+                tampered.append(f"Line {line_num}: Parse error - {e}")
+
+    return len(tampered) == 0, tampered
+
+
+def decrypt_audit_log(
+    audit_file: Path,
+    passphrase: str,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
+) -> list[dict[str, Any]]:
+    """Decrypt audit log and return events.
+
+    Decrypts encrypted audit log entries and optionally filters by date range.
+
+    Args:
+        audit_file: Path to encrypted audit log
+        passphrase: Decryption passphrase
+        start_date: Optional start date filter (inclusive)
+        end_date: Optional end date filter (inclusive)
+
+    Returns:
+        List of decrypted audit events
+
+    Example:
+        >>> events = decrypt_audit_log(
+        ...     Path("audit.log"),
+        ...     "secure123",
+        ...     start_date=datetime(2025, 1, 1)
+        ... )
+        >>> len(events) >= 0
+        True
+    """
+    if not audit_file.exists():
+        return []
+
+    events = []
+
+    with audit_file.open("r", encoding="utf-8") as f:
+        for line in f:
+            if not line.strip():
+                continue
+
+            try:
+                entry = json.loads(line)
+                encrypted = base64.b64decode(entry["encrypted_event"])
+
+                # Decrypt
+                event_json = decrypt_entry(encrypted, passphrase)
+                event = json.loads(event_json)
+
+                # Filter by date if specified
+                event_time = datetime.fromisoformat(event["timestamp"])
+                if start_date and event_time < start_date:
+                    continue
+                if end_date and event_time > end_date:
+                    continue
+
+                events.append(event)
+
+            except (json.JSONDecodeError, ValueError) as e:
+                # Skip entries that can't be decrypted (wrong passphrase or corrupted)
+                logger.debug("Skipping entry: %s", e)
+                continue
+
+    return events
