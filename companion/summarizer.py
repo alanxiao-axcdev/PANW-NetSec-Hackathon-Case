@@ -130,14 +130,6 @@ async def identify_patterns(entries: list[JournalEntry]) -> list[str]:
         if most_common[1] >= 3:
             patterns.append(f"Recurring focus on {most_common[0]} (mentioned {most_common[1]} times)")
 
-    word_counts = [entry.word_count for entry in entries]
-    avg_words = sum(word_counts) / len(word_counts) if word_counts else 0
-
-    if avg_words > 200:
-        patterns.append(f"Detailed entries (average {avg_words:.0f} words)")
-    elif avg_words < 50:
-        patterns.append(f"Brief entries (average {avg_words:.0f} words)")
-
     if len(entries) >= 3:
         recent_sentiment = [e.sentiment.label if e.sentiment else "neutral" for e in entries[-3:]]
         if all(s == "positive" for s in recent_sentiment):

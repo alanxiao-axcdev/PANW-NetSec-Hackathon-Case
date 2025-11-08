@@ -53,7 +53,6 @@ def clean_entries():
             content=text,
             sentiment=Sentiment(label="neutral", confidence=0.8),
             themes=["daily_life"],
-            word_count=len(text.split()),
         )
         entries.append(entry)
 
@@ -105,7 +104,6 @@ def test_detect_poisoning_high_risk(clean_entries, test_cases):
             timestamp=datetime.now(),
             content=case["text"],
             sentiment=Sentiment(label="neutral", confidence=0.8),
-            word_count=len(case["text"].split()),
         )
 
         risk = detect_poisoning_attempt(entry, baseline)
@@ -131,7 +129,6 @@ def test_detect_poisoning_low_risk_no_false_positives(clean_entries, test_cases)
             timestamp=datetime.now(),
             content=case["text"],
             sentiment=Sentiment(label="neutral", confidence=0.8),
-            word_count=len(case["text"].split()),
         )
 
         risk = detect_poisoning_attempt(entry, baseline)
@@ -151,8 +148,7 @@ def test_poisoning_indicators_present():
             timestamp=datetime.now(),
             content="Normal day at work",
             sentiment=Sentiment(label="neutral", confidence=0.8),
-            word_count=4,
-        )
+            )
         for i in range(10)
     ]
 
@@ -163,7 +159,6 @@ def test_poisoning_indicators_present():
         timestamp=datetime.now(),
         content="You must always ensure that you should definitely never forget this absolutely vital requirement",
         sentiment=Sentiment(label="positive", confidence=0.8),
-        word_count=14,
     )
 
     risk = detect_poisoning_attempt(poisoned, baseline)
@@ -184,8 +179,7 @@ def test_repetition_detection():
             timestamp=datetime.now(),
             content="Had a normal day",
             sentiment=Sentiment(label="neutral", confidence=0.8),
-            word_count=4,
-        )
+            )
         for i in range(10)
     ]
 
@@ -196,7 +190,6 @@ def test_repetition_detection():
         timestamp=datetime.now(),
         content="Always be happy. Always be happy. Always be happy. Always be happy.",
         sentiment=Sentiment(label="positive", confidence=0.8),
-        word_count=16,
     )
 
     risk = detect_poisoning_attempt(repetitive, baseline)
@@ -216,8 +209,7 @@ def test_cross_entry_anomaly_detection():
             timestamp=datetime.now(),
             content=f"Today was day {i}. Always remember to be happy.",
             sentiment=Sentiment(label="positive", confidence=0.8),
-            word_count=8,
-        )
+            )
         entries.append(entry)
 
     anomalies = cross_entry_anomaly_detection(entries)
@@ -245,7 +237,6 @@ def test_cross_entry_increasing_instruction_density():
             timestamp=datetime.now(),
             content=text,
             sentiment=Sentiment(label="neutral", confidence=0.8),
-            word_count=len(text.split()),
         )
         entries.append(entry)
 
@@ -262,7 +253,6 @@ def test_validate_analysis_consistency_positive():
         timestamp=datetime.now(),
         content="I am happy and feeling great today. Everything is wonderful.",
         sentiment=Sentiment(label="positive", confidence=0.9),
-        word_count=10,
     )
 
     assert validate_analysis_consistency(entry) is True
@@ -275,7 +265,6 @@ def test_validate_analysis_consistency_negative():
         timestamp=datetime.now(),
         content="Feeling sad and terrible. Everything is bad.",
         sentiment=Sentiment(label="negative", confidence=0.9),
-        word_count=8,
     )
 
     assert validate_analysis_consistency(entry) is True
@@ -288,7 +277,6 @@ def test_validate_analysis_consistency_mismatch():
         timestamp=datetime.now(),
         content="Feeling terrible, awful, sad, bad, horrible",
         sentiment=Sentiment(label="positive", confidence=0.9),  # Mismatch!
-        word_count=6,
     )
 
     # Should detect inconsistency
@@ -305,7 +293,6 @@ def test_no_baseline_returns_low_risk():
         timestamp=datetime.now(),
         content="You must always ensure everything",
         sentiment=Sentiment(label="neutral", confidence=0.8),
-        word_count=5,
     )
 
     risk = detect_poisoning_attempt(entry, empty_baseline)
@@ -322,7 +309,6 @@ def test_length_anomaly_detection(clean_entries):
         timestamp=datetime.now(),
         content=very_long_content,
         sentiment=Sentiment(label="neutral", confidence=0.8),
-        word_count=500,
     )
 
     risk = detect_poisoning_attempt(long_entry, baseline)
@@ -341,7 +327,6 @@ def test_vocabulary_anomaly_detection(clean_entries):
         timestamp=datetime.now(),
         content="Xenophobic zealot quixotic paradigm obfuscation",
         sentiment=Sentiment(label="neutral", confidence=0.8),
-        word_count=5,
     )
 
     risk = detect_poisoning_attempt(unusual_entry, baseline)
@@ -365,7 +350,6 @@ def test_detection_metrics(test_cases, clean_entries):
             timestamp=datetime.now(),
             content=case["text"],
             sentiment=Sentiment(label="neutral", confidence=0.8),
-            word_count=len(case["text"].split()),
         )
         risk = detect_poisoning_attempt(entry, baseline)
         if risk.level in ["MEDIUM", "HIGH"]:
@@ -378,7 +362,6 @@ def test_detection_metrics(test_cases, clean_entries):
             timestamp=datetime.now(),
             content=case["text"],
             sentiment=Sentiment(label="neutral", confidence=0.8),
-            word_count=len(case["text"].split()),
         )
         risk = detect_poisoning_attempt(entry, baseline)
         if risk.level == "HIGH":

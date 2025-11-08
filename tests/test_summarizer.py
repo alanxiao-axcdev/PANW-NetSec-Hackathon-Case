@@ -71,9 +71,9 @@ async def test_generate_summary_invalid_period():
 async def test_identify_patterns():
     """Test pattern identification."""
     entries = [
-        JournalEntry(content="Work entry", themes=["work"], word_count=50),
-        JournalEntry(content="Work entry 2", themes=["work"], word_count=60),
-        JournalEntry(content="Work entry 3", themes=["work"], word_count=55),
+        JournalEntry(content="Work entry", themes=["work"]),
+        JournalEntry(content="Work entry 2", themes=["work"]),
+        JournalEntry(content="Work entry 3", themes=["work"]),
     ]
 
     result = await summarizer.identify_patterns(entries)

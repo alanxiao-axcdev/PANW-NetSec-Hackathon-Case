@@ -109,13 +109,11 @@ class TestListCommand:
         entries = [
             JournalEntry(
                 content="Entry 1 content here",
-                word_count=3,
                 sentiment=Sentiment(label="positive", confidence=0.8),
                 themes=["work", "achievement"],
             ),
             JournalEntry(
                 content="Entry 2 content here",
-                word_count=3,
                 sentiment=Sentiment(label="neutral", confidence=0.6),
                 themes=["general"],
             ),
@@ -171,7 +169,6 @@ class TestShowCommand:
         entry = JournalEntry(
             id="test-entry-123",
             content="This is my journal entry content.",
-            word_count=6,
             sentiment=Sentiment(label="positive", confidence=0.85),
             themes=["reflection", "gratitude"],
         )
@@ -349,7 +346,6 @@ class TestHelpers:
         """Test entry summary formatting."""
         entry = JournalEntry(
             content="Test content for entry",
-            word_count=4,
             sentiment=Sentiment(label="positive", confidence=0.9),
             themes=["test", "example"],
         )

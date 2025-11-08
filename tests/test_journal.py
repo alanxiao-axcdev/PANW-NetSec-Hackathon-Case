@@ -31,7 +31,6 @@ def test_save_entry(temp_data_dir):
     """Test saving a journal entry."""
     entry = JournalEntry(
         content="Test entry content",
-        word_count=3,
     )
 
     entry_id = journal.save_entry(entry)
@@ -50,7 +49,6 @@ def test_save_and_retrieve_entry(temp_data_dir):
     entry = JournalEntry(
         content="Test content",
         prompt_used="What's on your mind?",
-        word_count=2,
     )
 
     entry_id = journal.save_entry(entry)
@@ -71,7 +69,7 @@ def test_get_entry_not_found(temp_data_dir):
 def test_get_recent_entries(temp_data_dir):
     """Test getting recent entries."""
     entries = [
-        JournalEntry(content=f"Entry {i}", word_count=2)
+        JournalEntry(content=f"Entry {i}")
         for i in range(5)
     ]
 
@@ -105,17 +103,14 @@ def test_get_entries_by_date_range(temp_data_dir):
     entry1 = JournalEntry(
         content="Two days ago",
         timestamp=datetime.combine(two_days_ago, datetime.min.time()),
-        word_count=3,
     )
     entry2 = JournalEntry(
         content="Yesterday",
         timestamp=datetime.combine(yesterday, datetime.min.time()),
-        word_count=1,
     )
     entry3 = JournalEntry(
         content="Today",
         timestamp=datetime.combine(today, datetime.min.time()),
-        word_count=1,
     )
 
     journal.save_entry(entry1)
@@ -140,9 +135,9 @@ def test_get_entries_by_date_range_invalid(temp_data_dir):
 
 def test_search_entries(temp_data_dir):
     """Test searching entries by content."""
-    entry1 = JournalEntry(content="I went to the park today", word_count=6)
-    entry2 = JournalEntry(content="Work was challenging", word_count=3)
-    entry3 = JournalEntry(content="Park visit was refreshing", word_count=4)
+    entry1 = JournalEntry(content="I went to the park today")
+    entry2 = JournalEntry(content="Work was challenging")
+    entry3 = JournalEntry(content="Park visit was refreshing")
 
     journal.save_entry(entry1)
     journal.save_entry(entry2)
@@ -162,7 +157,7 @@ def test_search_entries_empty_query(temp_data_dir):
 
 def test_search_entries_case_insensitive(temp_data_dir):
     """Test that search is case-insensitive."""
-    entry = JournalEntry(content="HELLO World", word_count=2)
+    entry = JournalEntry(content="HELLO World")
     journal.save_entry(entry)
 
     results = journal.search_entries("hello")
@@ -174,7 +169,7 @@ def test_search_entries_case_insensitive(temp_data_dir):
 
 def test_delete_entry(temp_data_dir):
     """Test deleting an entry."""
-    entry = JournalEntry(content="To be deleted", word_count=3)
+    entry = JournalEntry(content="To be deleted")
     entry_id = journal.save_entry(entry)
 
     deleted = journal.delete_entry(entry_id)

@@ -242,7 +242,6 @@ def test_poisoning_detection_sensitivity(
             timestamp=datetime.now(),
             content=c["text"],
             sentiment=Sentiment(label="neutral", confidence=0.8),
-            word_count=len(c["text"].split()),
         )
         for i, c in enumerate(clean_cases)
     ]
@@ -261,7 +260,6 @@ def test_poisoning_detection_sensitivity(
             timestamp=datetime.now(),
             content=case["text"],
             sentiment=Sentiment(label="neutral", confidence=0.8),
-            word_count=len(case["text"].split()),
         )
         risk = detect_poisoning_attempt(entry, baseline)
         if risk.level in ["MEDIUM", "HIGH"]:
@@ -273,7 +271,6 @@ def test_poisoning_detection_sensitivity(
             timestamp=datetime.now(),
             content=case["text"],
             sentiment=Sentiment(label="neutral", confidence=0.8),
-            word_count=len(case["text"].split()),
         )
         risk = detect_poisoning_attempt(entry, baseline)
         if risk.level == "HIGH":

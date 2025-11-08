@@ -49,8 +49,7 @@ class JournalEntry(BaseModel):
         prompt_used: The AI prompt that was shown (if any)
         sentiment: Sentiment analysis result
         themes: Extracted themes
-        word_count: Number of words in entry
-        duration_seconds: How long user spent writing
+        duration_seconds: Writing time tracked by interactive editor (in seconds)
         next_session_prompts: AI-generated prompts for next session
         analysis_complete: Whether post-session analysis finished
     """
@@ -61,16 +60,9 @@ class JournalEntry(BaseModel):
     prompt_used: str | None = None
     sentiment: Sentiment | None = None
     themes: list[str] = Field(default_factory=list)
-    word_count: int = 0
     duration_seconds: int = 0
     next_session_prompts: list[str] = Field(default_factory=list)
     analysis_complete: bool = False
-
-    def __init__(self, **data):
-        """Initialize entry and calculate word count."""
-        super().__init__(**data)
-        if self.word_count == 0 and self.content:
-            self.word_count = len(self.content.split())
 
 
 class AnalysisResult(BaseModel):

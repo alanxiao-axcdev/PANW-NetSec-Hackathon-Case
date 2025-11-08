@@ -110,7 +110,7 @@ def _format_entry_summary(entry: JournalEntry) -> str:
 
     return (
         f"[cyan]{timestamp_str}[/cyan]  {sentiment_icon}  {content_preview}\n"
-        f"[dim]    Themes: {themes_str} • {entry.word_count} words[/dim]"
+        f"[dim]    Themes: {themes_str}[/dim]"
     )
 
 
@@ -178,18 +178,16 @@ def write() -> None:
         return
 
     # Create entry
-    word_count = len(content.split())
     entry = JournalEntry(
         content=content,
-        word_count=word_count,
-        duration_seconds=0,  # Not tracking duration in MVP
+        duration_seconds=0,  # Will be updated when interactive editor implemented
     )
 
     # Save entry
     with console.status("[cyan]Saving entry..."):
         journal.save_entry(entry)
 
-    console.print(f"\n✓ Entry saved ({word_count} words)", style="green")
+    console.print("\n✓ Entry saved", style="green")
 
     # Analyze in background (async)
     console.print("\n[dim]Analyzing...[/dim]")
@@ -295,8 +293,6 @@ def show(entry_id: str) -> None:
         if entry.themes:
             themes_str = ", ".join(entry.themes)
             console.print(f"Themes: [cyan]{themes_str}[/cyan]", style="dim")
-
-        console.print(f"Word count: [cyan]{entry.word_count}[/cyan]", style="dim")
         console.print()
 
     except FileNotFoundError:

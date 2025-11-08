@@ -84,12 +84,6 @@ class TestJournalEntry:
         assert entry.content == "Test entry"
         assert entry.id  # Should have UUID
         assert entry.timestamp  # Should have timestamp
-        assert entry.word_count == 2  # "Test entry" = 2 words
-
-    def test_word_count_calculation(self):
-        """Test automatic word count."""
-        entry = JournalEntry(content="This is a test entry with seven words")
-        assert entry.word_count == 8
 
     def test_full_entry(self):
         """Test entry with all fields."""
