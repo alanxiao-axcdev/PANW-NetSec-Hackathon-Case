@@ -204,12 +204,17 @@ async def _run_interactive_editor(
             idle_duration = asyncio.get_event_loop().time() - last_activity
 
             if idle_duration >= idle_threshold:
-                # Use simple fallback prompts (AI is too slow for real-time UX)
                 placeholder_text = ""
 
+                # Use pre-computed prompts from previous session (instant, no AI delay)
                 if not text_area.text or len(text_area.text.strip()) < 20:
-                    # Starting prompt
-                    placeholder_text = "What's on your mind?"
+                    # Get pre-computed prompt from most recent entry
+                    if recent_entries and recent_entries[0].next_session_prompts:
+                        # Use first pre-computed prompt
+                        placeholder_text = recent_entries[0].next_session_prompts[0]
+                    else:
+                        # Fallback if no pre-computed prompts available
+                        placeholder_text = "What's on your mind?"
                 elif len(text_area.text.strip()) < 100:
                     # Continuation prompt
                     placeholder_text = "Keep writing..."
@@ -341,6 +346,14 @@ def write() -> None:
         async def analyze_entry() -> tuple[JournalEntry, str]:
             sentiment = await analyzer.analyze_sentiment(entry.content)
             themes = await analyzer.extract_themes(entry.content)
+
+            # Generate prompts for next session (runs in background, user doesn't wait)
+            try:
+                next_prompts = await prompter.generate_followup_prompts(entry, count=3)
+                entry.next_session_prompts = next_prompts
+            except Exception as e:
+                logger.debug("Failed to generate next-session prompts: %s", e)
+                # Not critical - continue without them
 
             # Update entry with analysis
             entry.sentiment = sentiment

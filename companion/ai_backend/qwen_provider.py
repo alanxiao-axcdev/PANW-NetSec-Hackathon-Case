@@ -6,11 +6,16 @@ via HuggingFace transformers. Downloads model on first use.
 
 import logging
 import time
+import warnings
 from pathlib import Path
 
 from companion.ai_backend.base import AIProvider
 from companion.models import ProviderHealth
 from companion.utils.retry import retry_with_backoff
+
+# Suppress transformers warnings for clean UX
+warnings.filterwarnings('ignore', message='.*torch_dtype.*')
+warnings.filterwarnings('ignore', category=UserWarning, module='transformers.*')
 
 logger = logging.getLogger(__name__)
 
@@ -124,15 +129,14 @@ class QwenProvider(AIProvider):
             # Tokenize input
             inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
 
-            # Generate
+            # Generate (optimized for speed)
             with torch.no_grad():
                 outputs = self.model.generate(
                     **inputs,
-                    max_new_tokens=max_tokens,
-                    do_sample=True,
-                    temperature=0.7,
-                    top_p=0.9,
+                    max_new_tokens=min(max_tokens, 50),  # Limit tokens for speed
+                    do_sample=False,  # Greedy decoding (faster than sampling)
                     pad_token_id=self.tokenizer.eos_token_id,
+                    num_beams=1,  # No beam search (faster)
                 )
 
             # Decode output
