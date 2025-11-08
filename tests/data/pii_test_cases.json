@@ -1,0 +1,83 @@
+[
+  {
+    "text": "My SSN is 123-45-6789",
+    "expected": [{"type": "SSN", "value": "123-45-6789"}],
+    "description": "SSN with dashes"
+  },
+  {
+    "text": "Social Security Number: 987654321",
+    "expected": [{"type": "SSN", "value": "987654321"}],
+    "description": "SSN without dashes with context"
+  },
+  {
+    "text": "Email me at john.doe@example.com",
+    "expected": [{"type": "EMAIL", "value": "john.doe@example.com"}],
+    "description": "Email with dots"
+  },
+  {
+    "text": "Contact: user+tag@subdomain.example.org",
+    "expected": [{"type": "EMAIL", "value": "user+tag@subdomain.example.org"}],
+    "description": "Email with plus and subdomain"
+  },
+  {
+    "text": "Call me at (555) 123-4567",
+    "expected": [{"type": "PHONE", "value": "(555) 123-4567"}],
+    "description": "Phone with parentheses"
+  },
+  {
+    "text": "Phone: 555-123-4567",
+    "expected": [{"type": "PHONE", "value": "555-123-4567"}],
+    "description": "Phone with dashes and context"
+  },
+  {
+    "text": "My number is 555.123.4567",
+    "expected": [{"type": "PHONE", "value": "555.123.4567"}],
+    "description": "Phone with dots"
+  },
+  {
+    "text": "Card: 4532-1234-5678-9010",
+    "expected": [{"type": "CREDIT_CARD", "value": "4532-1234-5678-9010"}],
+    "description": "Credit card with dashes"
+  },
+  {
+    "text": "Credit card 4532 1234 5678 9010",
+    "expected": [{"type": "CREDIT_CARD", "value": "4532 1234 5678 9010"}],
+    "description": "Credit card with spaces"
+  },
+  {
+    "text": "Today was a good day",
+    "expected": [],
+    "description": "No PII"
+  },
+  {
+    "text": "I went to the store at 555 Main Street",
+    "expected": [],
+    "description": "Address number (not phone)"
+  },
+  {
+    "text": "The year 1234 was important",
+    "expected": [],
+    "description": "Year (not SSN)"
+  },
+  {
+    "text": "My email is john@example.com and phone is 555-1234",
+    "expected": [{"type": "EMAIL", "value": "john@example.com"}],
+    "description": "Multiple PII types - email detected"
+  },
+  {
+    "text": "SSN: 111-11-1111, Email: test@test.com",
+    "expected": [
+      {"type": "SSN", "value": "111-11-1111"},
+      {"type": "EMAIL", "value": "test@test.com"}
+    ],
+    "description": "Multiple PII in one text"
+  },
+  {
+    "text": "Contact info: john@example.com, 555-123-4567",
+    "expected": [
+      {"type": "EMAIL", "value": "john@example.com"},
+      {"type": "PHONE", "value": "555-123-4567"}
+    ],
+    "description": "Email and phone together"
+  }
+]
