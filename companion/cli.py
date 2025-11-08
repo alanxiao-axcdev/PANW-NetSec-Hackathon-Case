@@ -14,7 +14,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
 
-from companion import analyzer, config, journal, summarizer
+from companion import analyzer, config, journal, prompter, summarizer
 from companion.models import JournalEntry
 from companion.monitoring import dashboard, health
 from companion.security.audit import decrypt_audit_log, verify_audit_log_integrity
@@ -143,7 +143,18 @@ def write() -> None:
     """
     _display_greeting()
 
-    console.print("What's on your mind today?\n", style="dim")
+    # Get intelligent prompt based on recent entries
+    recent_entries = journal.get_recent_entries(limit=5)
+    current_time = datetime.now()
+
+    # Generate context-aware prompt
+    try:
+        prompt_text = asyncio.run(prompter.get_reflection_prompt(recent_entries, current_time))
+        console.print(f"{prompt_text}\n", style="dim")
+    except Exception as e:
+        logger.debug("Failed to generate intelligent prompt: %s", e)
+        console.print("What's on your mind today?\n", style="dim")
+
     console.print("[dim](Type your entry below. Press Ctrl+D when done, Ctrl+C to cancel)[/dim]\n")
 
     # Get multi-line input
