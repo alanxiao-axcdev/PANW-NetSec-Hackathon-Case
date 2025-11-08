@@ -1,0 +1,101 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+*.cover
+.cache
+
+# Type checking and linting
+.mypy_cache/
+.dmypy.json
+.pytype/
+.ruff_cache/
+pyrightconfig.json
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# User data (CRITICAL - never commit!)
+.companion/
+~/.companion/
+
+# Security sensitive
+*.key
+*.pem
+*.p12
+*.pfx
+secrets.json
+.env
+.env.local
+
+# Model cache (large files)
+models/
+*.bin
+*.safetensors
+*.onnx
+
+# Logs
+*.log
+logs/
+audit_*.json
+
+# Benchmarks and profiling
+benchmark_results/
+*.stats
+*.prof
+
+# Documentation builds
+site/
+_build/
+
+# Temporary files
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# OS
+.Trash/
+.Spotlight-V100/
+.TemporaryItems/
+.fseventsd/
