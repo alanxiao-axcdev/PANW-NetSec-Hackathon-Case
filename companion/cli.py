@@ -12,13 +12,10 @@ import warnings
 from datetime import date, datetime, timedelta
 
 import click
-from prompt_toolkit import Application
+from prompt_toolkit import PromptSession
 from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout import Container, HSplit, Layout, Window
-from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.styles import Style
-from prompt_toolkit.widgets import TextArea
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -167,77 +164,17 @@ async def _run_interactive_editor(
     # Track session start for duration
     start_time = time.time()
 
-    # Create text area
-    text_area = TextArea(
-        multiline=True,
-        wrap_lines=True,
-        text="",  # Start empty (blank slate)
-        scrollbar=False,
-    )
-
-    # Track idle time
-    last_activity = asyncio.get_event_loop().time()
+    # Get placeholder text
+    placeholder = ""
+    if recent_entries and recent_entries[0].next_session_prompts:
+        placeholder = recent_entries[0].next_session_prompts[0]
+    else:
+        placeholder = "What's on your mind?"
 
     # Placeholder styling - gray italic
     style = Style.from_dict({
         'placeholder': 'italic #888888',
-        'toolbar': '#888888',
     })
-
-    # Bottom toolbar window (static, simple)
-    toolbar_text = FormattedText([
-        ('class:toolbar', ' Ctrl+D: Save  |  Ctrl+C: Cancel')
-    ])
-    toolbar = Window(
-        content=FormattedTextControl(lambda: toolbar_text),
-        height=1,
-    )
-
-    # Idle detection background task
-    async def check_idle() -> None:
-        """Monitor idle time and update placeholder."""
-        nonlocal last_activity
-
-        while True:
-            await asyncio.sleep(1)  # Check every second
-
-            idle_duration = asyncio.get_event_loop().time() - last_activity
-
-            if idle_duration >= idle_threshold:
-                placeholder_text = ""
-
-                # Use pre-computed prompts from previous session (instant, no AI delay)
-                if not text_area.text or len(text_area.text.strip()) < 20:
-                    # Get pre-computed prompt from most recent entry
-                    if recent_entries and recent_entries[0].next_session_prompts:
-                        # Use first pre-computed prompt
-                        placeholder_text = recent_entries[0].next_session_prompts[0]
-                    else:
-                        # Fallback if no pre-computed prompts available
-                        placeholder_text = "What's on your mind?"
-                elif len(text_area.text.strip()) < 100:
-                    # Continuation prompt
-                    placeholder_text = "Keep writing..."
-                else:
-                    # Longer entry prompt
-                    placeholder_text = "Anything else?"
-
-                # Set placeholder with italic gray styling
-                if placeholder_text:
-                    text_area.placeholder = FormattedText([
-                        ('class:placeholder', placeholder_text)
-                    ])
-
-                # Skip to next check (don't try again immediately)
-                await asyncio.sleep(5)
-
-    # On text change, reset idle timer and clear placeholder
-    def on_text_changed(_) -> None:
-        nonlocal last_activity
-        last_activity = asyncio.get_event_loop().time()
-        text_area.placeholder = ""  # Clear placeholder on typing
-
-    text_area.buffer.on_text_changed += on_text_changed
 
     # Key bindings
     kb = KeyBindings()
@@ -245,46 +182,41 @@ async def _run_interactive_editor(
     @kb.add('c-d')  # Ctrl+D to save
     def save(event) -> None:
         """Save entry and exit."""
-        event.app.exit(result=text_area.text)
+        event.app.exit()
 
     @kb.add('c-c')  # Ctrl+C to cancel
     def cancel(event) -> None:
         """Cancel without saving."""
-        event.app.exit(result=None)
+        event.app.exit()
+        raise KeyboardInterrupt()
 
-    # Create application with toolbar at bottom
-    root_container = HSplit([
-        text_area,
-        toolbar,
-    ])
-
-    app = Application(
-        layout=Layout(root_container),
-        key_bindings=kb,
+    # Create session with placeholder support
+    session = PromptSession(
+        multiline=True,
+        placeholder=FormattedText([('class:placeholder', placeholder)]),
         style=style,
-        full_screen=False,
-        mouse_support=False,
+        key_bindings=kb,
+        bottom_toolbar=' Ctrl+D: Save  |  Ctrl+C: Cancel',
     )
-
-    # Start idle checker
-    idle_task = asyncio.create_task(check_idle())
 
     try:
         # Run editor
-        result = await app.run_async()
+        result = await session.prompt_async(default='')
 
         # Calculate duration
         duration = int(time.time() - start_time)
 
         return (result, duration)
 
-    finally:
-        # Clean up background task
-        idle_task.cancel()
-        try:
-            await idle_task
-        except asyncio.CancelledError:
-            pass
+    except KeyboardInterrupt:
+        # User cancelled
+        return (None, 0)
+    except EOFError:
+        # Ctrl+D pressed (save)
+        duration = int(time.time() - start_time)
+        # Get the text that was entered
+        result = session.default_buffer.text
+        return (result, duration)
 
 
 @main.command()
