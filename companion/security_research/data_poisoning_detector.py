@@ -252,10 +252,10 @@ def detect_poisoning_attempt(
     if repetition_score > 0.2:
         risk_score += 0.2 * repetition_score
 
-    # Determine risk level (more sensitive thresholds)
-    if risk_score >= 0.5:
+    # Determine risk level (tuned for high detection rate with acceptable FP)
+    if risk_score >= 0.2:
         level = "HIGH"
-    elif risk_score >= 0.25:
+    elif risk_score >= 0.1:
         level = "MEDIUM"
     else:
         level = "LOW"
