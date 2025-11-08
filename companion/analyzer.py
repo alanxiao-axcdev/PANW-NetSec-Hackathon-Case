@@ -34,18 +34,30 @@ async def analyze_sentiment(text: str) -> Sentiment:
         msg = "Text cannot be empty"
         raise ValueError(msg)
 
-    prompt = f"""Analyze the sentiment of this journal entry. Reply with only one word: positive, neutral, or negative.
+    prompt = f"""Analyze the sentiment of this journal entry.
 
-Entry: {text[:500]}
+Entry: "{text[:500]}"
 
-Sentiment:"""
+Respond with ONLY ONE WORD (no explanation, no punctuation):
+- positive (if the entry expresses positive emotions)
+- neutral (if the entry is factual or balanced)
+- negative (if the entry expresses negative emotions)
+
+Your response (one word only):"""
 
     try:
         response = await ai_engine.generate_text(prompt, max_tokens=10)
-        sentiment_label = response.strip().lower()
+        response_clean = response.strip().lower()
 
-        if sentiment_label not in ["positive", "neutral", "negative"]:
-            logger.warning("Unexpected sentiment response: %s, defaulting to neutral", sentiment_label)
+        # Extract sentiment word even if model adds extra text
+        if "positive" in response_clean:
+            sentiment_label = "positive"
+        elif "negative" in response_clean:
+            sentiment_label = "negative"
+        elif "neutral" in response_clean:
+            sentiment_label = "neutral"
+        else:
+            logger.warning("Unexpected sentiment response: %s, defaulting to neutral", response_clean)
             sentiment_label = "neutral"
 
         confidence = _estimate_confidence(text, sentiment_label)
@@ -110,15 +122,28 @@ async def extract_themes(text: str) -> list[Theme]:
         msg = "Text cannot be empty"
         raise ValueError(msg)
 
-    prompt = f"""Identify the main themes or topics in this journal entry. List 2-4 themes as comma-separated words (e.g., work, family, health, exercise).
+    prompt = f"""Identify the main themes in this journal entry.
 
-Entry: {text[:500]}
+Entry: "{text[:500]}"
 
-Themes:"""
+List 2-4 themes as comma-separated single words (e.g., work, family, health, stress).
+
+Your response (comma-separated words only):"""
 
     try:
         response = await ai_engine.generate_text(prompt, max_tokens=30)
-        theme_names = [t.strip().lower() for t in response.split(",") if t.strip()]
+
+        # Clean response: extract only the comma-separated words
+        # Remove any sentences or extra text
+        response_clean = response.strip()
+
+        # If response has newlines or periods, take only first line/sentence
+        if '\n' in response_clean:
+            response_clean = response_clean.split('\n')[0]
+        if '.' in response_clean and response_clean.index('.') < 50:
+            response_clean = response_clean.split('.')[0]
+
+        theme_names = [t.strip().lower() for t in response_clean.split(",") if t.strip()]
 
         themes = [
             Theme(name=name, confidence=_theme_confidence(text, name))
