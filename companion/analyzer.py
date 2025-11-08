@@ -129,14 +129,13 @@ async def extract_themes(text: str) -> list[Theme]:
         msg = "Text cannot be empty"
         raise ValueError(msg)
 
-    prompt = f"""Identify the main themes in this journal entry.
+    prompt = f"""Read this journal entry and identify 2-4 main themes or topics.
 
 Entry: "{text[:500]}"
 
-Respond with 2-4 comma-separated single words ONLY (no explanations, no sentences).
-Examples: "work, stress, family" or "health, exercise, motivation"
+List the themes as comma-separated single words (no explanations).
 
-Your response (comma-separated words only):"""
+Themes:"""
 
     try:
         response = await ai_engine.generate_text(prompt, max_tokens=30)
