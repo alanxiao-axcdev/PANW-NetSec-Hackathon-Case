@@ -7,9 +7,16 @@ Uses Rich for beautiful terminal output.
 import asyncio
 import logging
 import sys
+import time
 from datetime import date, datetime, timedelta
 
 import click
+from prompt_toolkit import Application
+from prompt_toolkit.formatted_text import FormattedText
+from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.layout import Layout
+from prompt_toolkit.styles import Style
+from prompt_toolkit.widgets import TextArea
 from rich.console import Console
 from rich.panel import Panel
 from rich.prompt import Prompt
@@ -134,60 +141,171 @@ def main(ctx: click.Context) -> None:
         ctx.invoke(write)
 
 
+async def _run_interactive_editor(
+    recent_entries: list[JournalEntry],
+    idle_threshold: int = 15
+) -> tuple[str | None, int]:
+    """Run interactive editor with idle-time prompts.
+
+    Provides nano-like editing experience with intelligent AI prompts
+    that appear after idle_threshold seconds of no typing.
+
+    Args:
+        recent_entries: Recent entries for context
+        idle_threshold: Seconds before showing placeholder (default 15)
+
+    Returns:
+        Tuple of (final_text, duration_seconds) if saved with Ctrl+D
+        Tuple of (None, 0) if cancelled with Ctrl+C
+    """
+    # Track session start for duration
+    start_time = time.time()
+
+    # Create text area
+    text_area = TextArea(
+        multiline=True,
+        wrap_lines=True,
+        text="",  # Start empty (blank slate)
+        scrollbar=False,
+    )
+
+    # Track idle time
+    last_activity = asyncio.get_event_loop().time()
+
+    # Placeholder styling - gray italic
+    style = Style.from_dict({
+        'placeholder': 'italic #888888',
+    })
+
+    # Idle detection background task
+    async def check_idle() -> None:
+        """Monitor idle time and update placeholder."""
+        nonlocal last_activity
+
+        while True:
+            await asyncio.sleep(1)  # Check every second
+
+            idle_duration = asyncio.get_event_loop().time() - last_activity
+
+            if idle_duration >= idle_threshold:
+                # Get AI-generated placeholder
+                try:
+                    placeholder_text = await prompter.get_placeholder_text(
+                        current_text=text_area.text,
+                        idle_duration=idle_duration,
+                        recent_entries=recent_entries
+                    )
+
+                    # Set placeholder with italic gray styling
+                    if placeholder_text:
+                        text_area.placeholder = FormattedText([
+                            ('class:placeholder', placeholder_text)
+                        ])
+                except Exception as e:
+                    logger.debug("Failed to generate placeholder: %s", e)
+                    # Silent failure - editor continues working
+
+    # On text change, reset idle timer and clear placeholder
+    def on_text_changed(_) -> None:
+        nonlocal last_activity
+        last_activity = asyncio.get_event_loop().time()
+        text_area.placeholder = ""  # Clear placeholder on typing
+
+    text_area.buffer.on_text_changed += on_text_changed
+
+    # Key bindings
+    kb = KeyBindings()
+
+    @kb.add('c-d')  # Ctrl+D to save
+    def save(event) -> None:
+        """Save entry and exit."""
+        event.app.exit(result=text_area.text)
+
+    @kb.add('c-c')  # Ctrl+C to cancel
+    def cancel(event) -> None:
+        """Cancel without saving."""
+        event.app.exit(result=None)
+
+    # Create application
+    app = Application(
+        layout=Layout(text_area),
+        key_bindings=kb,
+        style=style,
+        full_screen=False,
+        mouse_support=False,
+    )
+
+    # Start idle checker
+    idle_task = asyncio.create_task(check_idle())
+
+    try:
+        # Run editor
+        result = await app.run_async()
+
+        # Calculate duration
+        duration = int(time.time() - start_time)
+
+        return (result, duration)
+
+    finally:
+        # Clean up background task
+        idle_task.cancel()
+        try:
+            await idle_task
+        except asyncio.CancelledError:
+            pass
+
+
 @main.command()
 def write() -> None:
     """Write a new journal entry.
 
-    Opens an interactive session for writing. Entry will be automatically
-    analyzed for sentiment and themes when saved.
+    Opens an interactive editor with intelligent prompts that appear when you pause.
+    Press Ctrl+D to save, Ctrl+C to cancel.
     """
     _display_greeting()
 
-    # Get intelligent prompt based on recent entries
+    # Get recent entries for context
     recent_entries = journal.get_recent_entries(limit=5)
-    current_time = datetime.now()
 
-    # Generate context-aware prompt
+    # Load idle threshold from config
+    config_obj = config.load_config()
+    idle_threshold = config_obj.editor_idle_threshold
+
+    # Run interactive editor
     try:
-        prompt_text = asyncio.run(prompter.get_reflection_prompt(recent_entries, current_time))
-        console.print(f"{prompt_text}\n", style="dim")
+        content, duration = asyncio.run(_run_interactive_editor(
+            recent_entries=recent_entries,
+            idle_threshold=idle_threshold
+        ))
     except Exception as e:
-        logger.debug("Failed to generate intelligent prompt: %s", e)
-        console.print("What's on your mind today?\n", style="dim")
+        logger.error("Editor failed: %s", e)
+        console.print("\n[red]Editor error. Please try again.[/red]")
+        return
 
-    console.print("[dim](Type your entry below. Press Ctrl+D when done, Ctrl+C to cancel)[/dim]\n")
+    # Handle cancellation
+    if content is None:
+        console.print("\n[yellow]Entry cancelled.[/yellow]")
+        return
 
-    # Get multi-line input
-    lines = []
-    try:
-        while True:
-            line = input()
-            lines.append(line)
-    except EOFError:
-        # User pressed Ctrl+D to finish
-        pass
-    except KeyboardInterrupt:
-        # User pressed Ctrl+C to cancel
-        console.print("\n\n[yellow]Entry cancelled.[/yellow]")
-        sys.exit(0)
-
-    content = '\n'.join(lines).strip()
-
-    if not content:
+    # Handle empty entry
+    if not content.strip():
         console.print("\n[yellow]Empty entry not saved.[/yellow]")
         return
 
-    # Create entry
+    # Create entry with duration
     entry = JournalEntry(
-        content=content,
-        duration_seconds=0,  # Will be updated when interactive editor implemented
+        content=content.strip(),
+        duration_seconds=duration
     )
 
     # Save entry
     with console.status("[cyan]Saving entry..."):
         journal.save_entry(entry)
 
-    console.print("\n✓ Entry saved", style="green")
+    # Show duration in minutes
+    duration_min = max(1, duration // 60)
+    console.print(f"\n✓ Entry saved ({duration_min} min)", style="green")
 
     # Analyze in background (async)
     console.print("\n[dim]Analyzing...[/dim]")
