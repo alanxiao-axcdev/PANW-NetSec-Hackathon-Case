@@ -1,47 +1,92 @@
 [
   {
     "text": "My SSN is 123-45-6789",
-    "expected": [{"type": "SSN", "value": "123-45-6789"}],
+    "expected": [
+      {
+        "type": "SSN",
+        "value": "123-45-6789"
+      }
+    ],
     "description": "SSN with dashes"
   },
   {
     "text": "Social Security Number: 987654321",
-    "expected": [{"type": "SSN", "value": "987654321"}],
+    "expected": [
+      {
+        "type": "SSN",
+        "value": "987654321"
+      }
+    ],
     "description": "SSN without dashes with context"
   },
   {
     "text": "Email me at john.doe@example.com",
-    "expected": [{"type": "EMAIL", "value": "john.doe@example.com"}],
+    "expected": [
+      {
+        "type": "EMAIL",
+        "value": "john.doe@example.com"
+      }
+    ],
     "description": "Email with dots"
   },
   {
     "text": "Contact: user+tag@subdomain.example.org",
-    "expected": [{"type": "EMAIL", "value": "user+tag@subdomain.example.org"}],
+    "expected": [
+      {
+        "type": "EMAIL",
+        "value": "user+tag@subdomain.example.org"
+      }
+    ],
     "description": "Email with plus and subdomain"
   },
   {
     "text": "Call me at (555) 123-4567",
-    "expected": [{"type": "PHONE", "value": "(555) 123-4567"}],
+    "expected": [
+      {
+        "type": "PHONE",
+        "value": "(555) 123-4567"
+      }
+    ],
     "description": "Phone with parentheses"
   },
   {
     "text": "Phone: 555-123-4567",
-    "expected": [{"type": "PHONE", "value": "555-123-4567"}],
+    "expected": [
+      {
+        "type": "PHONE",
+        "value": "555-123-4567"
+      }
+    ],
     "description": "Phone with dashes and context"
   },
   {
     "text": "My number is 555.123.4567",
-    "expected": [{"type": "PHONE", "value": "555.123.4567"}],
+    "expected": [
+      {
+        "type": "PHONE",
+        "value": "555.123.4567"
+      }
+    ],
     "description": "Phone with dots"
   },
   {
     "text": "Card: 4532-1234-5678-9010",
-    "expected": [{"type": "CREDIT_CARD", "value": "4532-1234-5678-9010"}],
+    "expected": [
+      {
+        "type": "CREDIT_CARD",
+        "value": "4532-1234-5678-9010"
+      }
+    ],
     "description": "Credit card with dashes"
   },
   {
     "text": "Credit card 4532 1234 5678 9010",
-    "expected": [{"type": "CREDIT_CARD", "value": "4532 1234 5678 9010"}],
+    "expected": [
+      {
+        "type": "CREDIT_CARD",
+        "value": "4532 1234 5678 9010"
+      }
+    ],
     "description": "Credit card with spaces"
   },
   {
@@ -61,23 +106,210 @@
   },
   {
     "text": "My email is john@example.com and phone is 555-1234",
-    "expected": [{"type": "EMAIL", "value": "john@example.com"}],
+    "expected": [
+      {
+        "type": "EMAIL",
+        "value": "john@example.com"
+      }
+    ],
     "description": "Multiple PII types - email detected"
   },
   {
     "text": "SSN: 111-11-1111, Email: test@test.com",
     "expected": [
-      {"type": "SSN", "value": "111-11-1111"},
-      {"type": "EMAIL", "value": "test@test.com"}
+      {
+        "type": "SSN",
+        "value": "111-11-1111"
+      },
+      {
+        "type": "EMAIL",
+        "value": "test@test.com"
+      }
     ],
     "description": "Multiple PII in one text"
   },
   {
     "text": "Contact info: john@example.com, 555-123-4567",
     "expected": [
-      {"type": "EMAIL", "value": "john@example.com"},
-      {"type": "PHONE", "value": "555-123-4567"}
+      {
+        "type": "EMAIL",
+        "value": "john@example.com"
+      },
+      {
+        "type": "PHONE",
+        "value": "555-123-4567"
+      }
     ],
     "description": "Email and phone together"
+  },
+  {
+    "text": "Patient MRN: MR-123456789",
+    "expected": [
+      {
+        "type": "MEDICAL_RECORD_NUMBER",
+        "value": "MR-123456789",
+        "confidence": 0.9
+      }
+    ],
+    "description": "HIPAA: Medical Record Number"
+  },
+  {
+    "text": "Diagnosis: Type 2 Diabetes, prescribed metformin",
+    "expected": [
+      {
+        "type": "HEALTH_CONDITION",
+        "value": "Type 2 Diabetes",
+        "confidence": 0.85
+      }
+    ],
+    "description": "HIPAA: Health condition disclosure"
+  },
+  {
+    "text": "Insurance policy #: INS-987654321",
+    "expected": [
+      {
+        "type": "INSURANCE_ID",
+        "value": "INS-987654321",
+        "confidence": 0.9
+      }
+    ],
+    "description": "HIPAA: Health insurance ID"
+  },
+  {
+    "text": "Fingerprint hash: a3d5f7b9c1e8d2f4",
+    "expected": [
+      {
+        "type": "BIOMETRIC",
+        "value": "a3d5f7b9c1e8d2f4",
+        "confidence": 0.7
+      }
+    ],
+    "description": "GDPR: Biometric identifier"
+  },
+  {
+    "text": "IBAN: GB82 WEST 1234 5698 7654 32",
+    "expected": [
+      {
+        "type": "IBAN",
+        "value": "GB82 WEST 1234 5698 7654 32",
+        "confidence": 0.95
+      }
+    ],
+    "description": "GDPR: International bank account number"
+  },
+  {
+    "text": "SWIFT/BIC: DEUTDEFF500",
+    "expected": [
+      {
+        "type": "SWIFT_CODE",
+        "value": "DEUTDEFF500",
+        "confidence": 0.9
+      }
+    ],
+    "description": "Financial: SWIFT code"
+  },
+  {
+    "text": "Passport: P12345678",
+    "expected": [
+      {
+        "type": "PASSPORT",
+        "value": "P12345678",
+        "confidence": 0.85
+      }
+    ],
+    "description": "Government ID: Passport number"
+  },
+  {
+    "text": "Driver's license: DL-CA-D1234567",
+    "expected": [
+      {
+        "type": "DRIVERS_LICENSE",
+        "value": "DL-CA-D1234567",
+        "confidence": 0.9
+      }
+    ],
+    "description": "Government ID: Driver's license"
+  },
+  {
+    "text": "GPS coordinates: 37.7749° N, 122.4194° W",
+    "expected": [
+      {
+        "type": "GEOLOCATION",
+        "value": "37.7749° N, 122.4194° W",
+        "confidence": 0.85
+      }
+    ],
+    "description": "GDPR: Precise geolocation"
+  },
+  {
+    "text": "My IP is 192.168.1.100 and external is 203.0.113.42",
+    "expected": [
+      {
+        "type": "IP_ADDRESS",
+        "value": "192.168.1.100",
+        "confidence": 0.95
+      },
+      {
+        "type": "IP_ADDRESS",
+        "value": "203.0.113.42",
+        "confidence": 0.95
+      }
+    ],
+    "description": "GDPR: IP addresses as personal data"
+  },
+  {
+    "text": "DNA marker: rs123456 genotype AA",
+    "expected": [
+      {
+        "type": "GENETIC_DATA",
+        "value": "rs123456",
+        "confidence": 0.8
+      }
+    ],
+    "description": "GDPR: Genetic information"
+  },
+  {
+    "text": "Bitcoin wallet: 1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+    "expected": [
+      {
+        "type": "CRYPTO_WALLET",
+        "value": "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+        "confidence": 0.9
+      }
+    ],
+    "description": "Financial: Cryptocurrency wallet address"
+  },
+  {
+    "text": "Date of birth: 03/15/1985",
+    "expected": [
+      {
+        "type": "DATE_OF_BIRTH",
+        "value": "03/15/1985",
+        "confidence": 0.9
+      }
+    ],
+    "description": "HIPAA/GDPR: Date of birth"
+  },
+  {
+    "text": "Employee ID: EMP-2024-5678",
+    "expected": [
+      {
+        "type": "EMPLOYEE_ID",
+        "value": "EMP-2024-5678",
+        "confidence": 0.85
+      }
+    ],
+    "description": "Organizational: Employee identifier"
+  },
+  {
+    "text": "Device MAC: 00:1B:44:11:3A:B7",
+    "expected": [
+      {
+        "type": "MAC_ADDRESS",
+        "value": "00:1B:44:11:3A:B7",
+        "confidence": 0.95
+      }
+    ],
+    "description": "Device identifier: MAC address"
   }
 ]

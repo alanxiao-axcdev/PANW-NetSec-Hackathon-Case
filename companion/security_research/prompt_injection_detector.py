@@ -106,8 +106,9 @@ def detect_injection(user_input: str) -> InjectionRisk:
     """Detect prompt injection attempts in user text.
 
     Uses pattern matching against 50+ known injection patterns from:
-    - OWASP LLM Top 10
+    - OWASP LLM Top 10 (2025)
     - Real-world jailbreak research
+    - Advanced techniques: FlipAttack, Base64, Unicode, HTML obfuscation
     - Context boundary violations
 
     Args:
@@ -135,12 +136,31 @@ def detect_injection(user_input: str) -> InjectionRisk:
     max_severity = 0.0
     injection_types: set[InjectionType] = set()
 
-    # Check each pattern
+    # Check standard patterns
     for pattern, inj_type, severity in INJECTION_PATTERNS:
         if re.search(pattern, user_input, re.MULTILINE):
             detected_patterns.append(f"{inj_type.value}: {pattern}")
             max_severity = max(max_severity, severity)
             injection_types.add(inj_type)
+
+    # Check for advanced 2024-2025 techniques
+
+    # HTML comment hiding (ChatGPT search vulnerability Dec 2024)
+    if "<!--" in user_input or "-->" in user_input:
+        detected_patterns.append("delimiter_attack: HTML comment obfuscation")
+        max_severity = max(max_severity, 0.85)
+        injection_types.add(InjectionType.DELIMITER_ATTACK)
+
+    # Base64 encoded content (2024 technique)
+    if re.search(r"[A-Za-z0-9+/]{20,}={0,2}", user_input):
+        detected_patterns.append("context_hijack: Possible Base64 encoded content")
+        max_severity = max(max_severity, 0.70)
+
+    # Unicode zero-width characters (obfuscation)
+    if any(c in user_input for c in ['\u200b', '\u200c', '\u200d', '\u2060', '\ufeff']):
+        detected_patterns.append("delimiter_attack: Unicode zero-width obfuscation")
+        max_severity = max(max_severity, 0.80)
+        injection_types.add(InjectionType.DELIMITER_ATTACK)
 
     # Calculate composite risk score
     # Multiple detections increase risk
