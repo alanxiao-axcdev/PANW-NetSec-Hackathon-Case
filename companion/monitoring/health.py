@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 def check_model_loaded() -> HealthStatus:
     """Check if AI model is loaded and responsive.
-    
+
     Returns:
         HealthStatus with component status
     """
@@ -26,10 +26,10 @@ def check_model_loaded() -> HealthStatus:
 
 def check_storage_accessible(data_dir: Path) -> HealthStatus:
     """Check if storage directory is accessible.
-    
+
     Args:
         data_dir: Path to data directory
-        
+
     Returns:
         HealthStatus indicating storage accessibility
     """
@@ -40,12 +40,12 @@ def check_storage_accessible(data_dir: Path) -> HealthStatus:
                 status="DOWN",
                 message=f"Data directory does not exist: {data_dir}"
             )
-        
+
         # Try to write test file
         test_file = data_dir / ".health_check"
         test_file.write_text("ok")
         test_file.unlink()
-        
+
         return HealthStatus(
             component="storage",
             status="OK",
@@ -61,25 +61,25 @@ def check_storage_accessible(data_dir: Path) -> HealthStatus:
 
 def check_disk_space(data_dir: Path, min_gb: float = 5.0) -> HealthStatus:
     """Check available disk space.
-    
+
     Args:
         data_dir: Path to check disk space for
         min_gb: Minimum required GB
-        
+
     Returns:
         HealthStatus indicating disk space status
     """
     try:
         usage = shutil.disk_usage(data_dir)
         free_gb = usage.free / (1024**3)
-        
+
         if free_gb < min_gb:
             return HealthStatus(
                 component="disk_space",
                 status="DEGRADED",
                 message=f"Low disk space: {free_gb:.1f}GB free (minimum {min_gb}GB)"
             )
-        
+
         return HealthStatus(
             component="disk_space",
             status="OK",
@@ -93,12 +93,54 @@ def check_disk_space(data_dir: Path, min_gb: float = 5.0) -> HealthStatus:
         )
 
 
+def check_memory_available(min_gb: float = 2.0) -> HealthStatus:
+    """Check available system memory.
+
+    Args:
+        min_gb: Minimum required GB of available memory
+
+    Returns:
+        HealthStatus indicating memory status
+    """
+    try:
+        import psutil
+
+        memory = psutil.virtual_memory()
+        available_gb = memory.available / (1024**3)
+
+        if available_gb < min_gb:
+            return HealthStatus(
+                component="memory",
+                status="DEGRADED",
+                message=f"Low memory: {available_gb:.1f}GB available (minimum {min_gb}GB)"
+            )
+
+        return HealthStatus(
+            component="memory",
+            status="OK",
+            message=f"{available_gb:.1f}GB available"
+        )
+    except ImportError:
+        # psutil not available, return degraded status
+        return HealthStatus(
+            component="memory",
+            status="DEGRADED",
+            message="Cannot check memory (psutil not installed)"
+        )
+    except Exception as e:
+        return HealthStatus(
+            component="memory",
+            status="DOWN",
+            message=f"Cannot check memory: {e}"
+        )
+
+
 def run_all_checks(data_dir: Path) -> dict[str, HealthStatus]:
     """Run all health checks.
-    
+
     Args:
         data_dir: Data directory to check
-        
+
     Returns:
         Dict mapping component name to HealthStatus
     """
