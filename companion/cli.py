@@ -8,6 +8,7 @@ import asyncio
 import logging
 import sys
 import time
+import warnings
 from datetime import date, datetime, timedelta
 
 import click
@@ -159,6 +160,10 @@ async def _run_interactive_editor(
         Tuple of (final_text, duration_seconds) if saved with Ctrl+D
         Tuple of (None, 0) if cancelled with Ctrl+C
     """
+    # Suppress AI model warnings for clean UX
+    warnings.filterwarnings('ignore', message='.*torch_dtype.*')
+    warnings.filterwarnings('ignore', category=UserWarning, module='transformers.*')
+
     # Track session start for duration
     start_time = time.time()
 
@@ -170,37 +175,28 @@ async def _run_interactive_editor(
         scrollbar=False,
     )
 
-    # Track idle time and AI status
+    # Track idle time
     last_activity = asyncio.get_event_loop().time()
-    ai_status = ""  # Status message for bottom bar
 
-    # Placeholder styling - gray italic, status bar
+    # Placeholder styling - gray italic
     style = Style.from_dict({
         'placeholder': 'italic #888888',
-        'status': '#888888',
-        'status.key': 'bold #ffffff',
+        'toolbar': '#888888',
     })
 
-    # Status bar at bottom
-    def get_statusbar_text() -> list[tuple[str, str]]:
-        """Generate status bar text."""
-        return [
-            ('class:status.key', ' Ctrl+D '),
-            ('class:status', 'Save  '),
-            ('class:status.key', 'Ctrl+C '),
-            ('class:status', 'Cancel  '),
-            ('class:status', ai_status),
-        ]
-
-    status_bar = Window(
-        content=FormattedTextControl(get_statusbar_text),
+    # Bottom toolbar window (static, simple)
+    toolbar_text = FormattedText([
+        ('class:toolbar', ' Ctrl+D: Save  |  Ctrl+C: Cancel')
+    ])
+    toolbar = Window(
+        content=FormattedTextControl(lambda: toolbar_text),
         height=1,
     )
 
     # Idle detection background task
     async def check_idle() -> None:
         """Monitor idle time and update placeholder."""
-        nonlocal last_activity, ai_status
+        nonlocal last_activity
 
         while True:
             await asyncio.sleep(1)  # Check every second
@@ -208,29 +204,27 @@ async def _run_interactive_editor(
             idle_duration = asyncio.get_event_loop().time() - last_activity
 
             if idle_duration >= idle_threshold:
-                # Show loading indicator
-                ai_status = "  ⏳ Thinking..."
+                # Use simple fallback prompts (AI is too slow for real-time UX)
+                placeholder_text = ""
 
-                # Get AI-generated placeholder
-                try:
-                    placeholder_text = await prompter.get_placeholder_text(
-                        current_text=text_area.text,
-                        idle_duration=idle_duration,
-                        recent_entries=recent_entries
-                    )
+                if not text_area.text or len(text_area.text.strip()) < 20:
+                    # Starting prompt
+                    placeholder_text = "What's on your mind?"
+                elif len(text_area.text.strip()) < 100:
+                    # Continuation prompt
+                    placeholder_text = "Keep writing..."
+                else:
+                    # Longer entry prompt
+                    placeholder_text = "Anything else?"
 
-                    # Clear loading indicator
-                    ai_status = ""
+                # Set placeholder with italic gray styling
+                if placeholder_text:
+                    text_area.placeholder = FormattedText([
+                        ('class:placeholder', placeholder_text)
+                    ])
 
-                    # Set placeholder with italic gray styling
-                    if placeholder_text:
-                        text_area.placeholder = FormattedText([
-                            ('class:placeholder', placeholder_text)
-                        ])
-                except Exception as e:
-                    logger.debug("Failed to generate placeholder: %s", e)
-                    ai_status = ""  # Clear loading on error
-                    # Silent failure - editor continues working
+                # Skip to next check (don't try again immediately)
+                await asyncio.sleep(5)
 
     # On text change, reset idle timer and clear placeholder
     def on_text_changed(_) -> None:
@@ -253,10 +247,10 @@ async def _run_interactive_editor(
         """Cancel without saving."""
         event.app.exit(result=None)
 
-    # Create application with status bar at bottom
+    # Create application with toolbar at bottom
     root_container = HSplit([
         text_area,
-        status_bar,
+        toolbar,
     ])
 
     app = Application(
@@ -296,9 +290,6 @@ def write() -> None:
     Press Ctrl+D to save, Ctrl+C to cancel.
     """
     _display_greeting()
-
-    # Show brief instructions
-    console.print("[dim]Starting editor... (Ctrl+D to save, Ctrl+C to cancel)[/dim]\n")
 
     # Get recent entries for context
     recent_entries = journal.get_recent_entries(limit=5)
