@@ -129,13 +129,14 @@ Foundation functionality for journaling application.
 - **Dependencies**: All core modules, Click, Rich
 - **Lines**: ~400
 
-**Module: input_handler.py**
-- **Purpose**: Terminal input with intelligent prompts
-- **Exports**: `monitor_keystroke_timing()`, `show_placeholder()`, `read_with_prompts()`
+**Module: cli.py - Interactive Editor**
+- **Purpose**: Professional terminal editor with idle-time prompts
+- **Features**: Blank slate start, idle detection, contextual AI prompts, duration tracking
+- **Implementation**: `_run_interactive_editor()` function (~100 lines inline in cli.py)
+- **Keyboard shortcuts**: Ctrl+D (save), Ctrl+C (cancel)
 - **Dependencies**: `prompter`, prompt_toolkit
-- **Lines**: ~160
 
-**Total Core**: ~1,940 lines
+**Total Core**: ~1,840 lines
 
 ---
 
@@ -376,31 +377,35 @@ Shared utilities for reliability.
 ### Daily Journaling Flow
 
 ```
-User runs `companion`
+User runs `companion write`
     ↓
 CLI checks authentication (passphrase)
     ↓
 Load configuration & recent entries
     ↓
-Input Handler monitors keystrokes
+Interactive Editor starts with blank slate
     ↓
-[15s idle] → Prompter generates context-aware prompt
+Background idle detection task monitors typing
     ↓
-User writes entry
+[After idle_threshold seconds] → Prompter generates context-aware prompt
     ↓
-User saves (Ctrl+D)
+Gray italicized placeholder appears in editor
+    ↓
+User types → placeholder disappears
+    ↓
+User saves with Ctrl+D (duration tracked)
     ↓
 Security Layer: PII detection warning (if applicable)
     ↓
 Encryption: Encrypt entry with user passphrase
     ↓
-Storage: Save encrypted JSON
+Storage: Save encrypted JSON with duration_seconds
     ↓
 [Background] Analyzer: Sentiment & theme extraction
     ↓
 [Background] Audit: Log entry creation event
     ↓
-Display quick feedback to user
+Display feedback (duration, sentiment, themes)
     ↓
 Session ends
 ```
@@ -462,8 +467,7 @@ class JournalEntry(BaseModel):
     prompt_used: str | None
     sentiment: Sentiment | None
     themes: list[str]
-    word_count: int
-    duration_seconds: int
+    duration_seconds: int  # Writing time tracked by interactive editor
     encrypted: bool = True
 
 def save_entry(entry: JournalEntry) -> str:
@@ -663,7 +667,6 @@ def display_metrics_dashboard() -> None:
   "timestamp": "2025-01-08T14:30:00Z",
   "content_encrypted": "base64-encoded-ciphertext",
   "metadata": {
-    "word_count": 145,
     "duration_seconds": 180,
     "prompt_used": "How was your day?"
   }
@@ -807,9 +810,8 @@ PANW1/
     "key_derivation": "PBKDF2",
     "iterations": 600000
   },
-  "prompts": {
-    "timing_threshold_seconds": 15,
-    "show_placeholders": true
+  "editor": {
+    "idle_threshold": 15
   },
   "security": {
     "pii_detection_enabled": true,

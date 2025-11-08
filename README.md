@@ -22,12 +22,19 @@ Built for **Palo Alto Networks R&D NetSec Hackathon** to showcase AI security en
 cd /home/nyzio/amplifier/PANW1
 source .venv/bin/activate
 
-# Run the application
-python -m companion.cli
+# Start writing in the interactive editor
+python -m companion.cli write
 
 # Verify all tests pass
 python -m pytest -v | tail -5
 ```
+
+**Interactive Writing Experience:**
+- Start with a blank slate (no upfront prompts)
+- After 15 seconds of idle time, contextual AI prompts appear as subtle gray text
+- **Ctrl+D** to save your entry
+- **Ctrl+C** to cancel
+- Nano-like editor UX for a natural writing flow
 
 **That's it!** Works immediately with intelligent mock AI (no 3GB model download needed for demo).
 

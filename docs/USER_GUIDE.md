@@ -126,39 +126,46 @@ Companion will:
 - Let you write freely
 - Analyze your entry when you're done
 
-### The Intelligent Prompt System
+### The Interactive Editor
+
+**Companion uses a professional terminal editor** with intelligent prompts that appear when you need them.
 
 **How it works**:
 
-1. **You start with a blank canvas** - No prompt initially, you can start typing immediately
-2. **15-second pause detection** - If you haven't typed anything for 15 seconds, a prompt appears
-3. **Prompt as placeholder** - Shows as gray text inline, disappears when you type
-4. **Context-aware** - Prompts reference your recent entries and current mood
+1. **Blank slate start** - No prompt shown initially, just an empty text area
+2. **Idle detection** - After 15 seconds of no typing, contextual AI prompts appear
+3. **Subtle placeholders** - Prompts show as *gray, italicized* text that disappears when you type
+4. **Context-aware** - Prompts reference your recent entries and current writing
+5. **Configurable timing** - Adjust idle threshold in config (default: 15 seconds)
+
+**Keyboard Shortcuts**:
+- **Ctrl+D** - Save entry and exit
+- **Ctrl+C** - Cancel without saving
 
 **Example session**:
 
 ```bash
-$ companion
+$ companion write
 
 Good evening! 🌙
 
-→ _
+_
 
 [You pause for 15 seconds...]
 
-→ Yesterday you mentioned work stress. How did today go? _
+Yesterday you mentioned work stress. How did today go?
 
-[You start typing "A"...]
+[Gray italicized placeholder appears above. You start typing "A"...]
 
-→ A_
+A_
 
-[Placeholder disappears, you continue writing...]
+[Placeholder disappears immediately, you continue writing...]
 
-→ Actually had a breakthrough today. The solution was simpler than I thought...
+Actually had a breakthrough today. The solution was simpler than I thought...
 
-[You finish and save with Ctrl+D]
+[You finish and press Ctrl+D to save]
 
-✓ Entry saved (28 words, 3 min)
+✓ Entry saved (3 min)
 
 Sentiment: Stressed → Relief → Positive
 Themes: Work, Problem-solving, Breakthrough
@@ -166,18 +173,15 @@ Themes: Work, Problem-solving, Breakthrough
 Great insight about perspective! See you tomorrow. 💚
 ```
 
+**Duration Tracking**: Your writing time is automatically recorded for personal insights.
+
 ### Saving Your Entry
 
 **To save and finish**:
-- Press `Ctrl+D` (or `Cmd+D` on Mac)
-- Or type `.save` on a new line
-
-**To save and continue**:
-- Type `.save` on a new line
-- Continue writing in the same session
+- Press **Ctrl+D** - Saves entry and exits the editor
 
 **To cancel without saving**:
-- Press `Ctrl+C` (or `Cmd+C` on Mac)
+- Press **Ctrl+C** - Exits without saving
 
 ### PII Warnings
 
@@ -212,16 +216,16 @@ $ companion list
 Your Recent Entries
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-2025-01-08  14:30  Breakthrough at work            (28 words)
+2025-01-08  14:30  Breakthrough at work
             Positive • Work, Problem-solving
 
-2025-01-07  19:15  Tough day, feeling overwhelmed  (156 words)
+2025-01-07  19:15  Tough day, feeling overwhelmed
             Negative • Work, Stress, Anxiety
 
-2025-01-06  10:22  Great morning run               (45 words)
+2025-01-06  10:22  Great morning run
             Positive • Health, Exercise, Mindfulness
 
-2025-01-05  21:00  Reflecting on the week          (203 words)
+2025-01-05  21:00  Reflecting on the week
             Neutral • Reflection, Planning
 
 [Showing 4 of 47 entries]
@@ -250,7 +254,6 @@ helped me see it fresh.
 Sentiment: Frustrated → Relief → Positive
 Themes: Work, Problem-solving, Collaboration
 Duration: 3 minutes
-Word count: 28 words
 ```
 
 ---
@@ -265,7 +268,7 @@ $ companion summary
 Weekly Reflection (Jan 1-7, 2025)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 This Week: 7 entries, 892 words
+📊 This Week: 7 entries
 
 Emotional Journey:
   This week started with stress about the project deadline,
@@ -304,7 +307,7 @@ $ companion summary --month
 Monthly Reflection (January 2025)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 This Month: 28 entries, 4,234 words
+📊 This Month: 28 entries
 
 [Detailed monthly analysis with trends, growth areas, and insights]
 ```
@@ -447,9 +450,8 @@ Edit `~/.companion/config.json`:
 
 ```json
 {
-  "prompts": {
-    "timing_threshold_seconds": 15,
-    "show_placeholders": true
+  "editor": {
+    "idle_threshold": 15
   },
   "security": {
     "pii_detection_enabled": true,
@@ -463,7 +465,7 @@ Edit `~/.companion/config.json`:
 ```
 
 **Options**:
-- `timing_threshold_seconds`: How long to wait before showing prompt (default: 15)
+- `editor.idle_threshold`: Seconds of idle time before showing prompt (default: 15)
 - `pii_sensitivity`: `"paranoid"`, `"balanced"`, or `"relaxed"`
 - `cache_similarity_threshold`: 0.0-1.0 (higher = stricter matching)
 
