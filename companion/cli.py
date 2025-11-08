@@ -14,7 +14,8 @@ import click
 from prompt_toolkit import Application
 from prompt_toolkit.formatted_text import FormattedText
 from prompt_toolkit.key_binding import KeyBindings
-from prompt_toolkit.layout import Layout
+from prompt_toolkit.layout import Container, HSplit, Layout, Window
+from prompt_toolkit.layout.controls import FormattedTextControl
 from prompt_toolkit.styles import Style
 from prompt_toolkit.widgets import TextArea
 from rich.console import Console
@@ -169,18 +170,37 @@ async def _run_interactive_editor(
         scrollbar=False,
     )
 
-    # Track idle time
+    # Track idle time and AI status
     last_activity = asyncio.get_event_loop().time()
+    ai_status = ""  # Status message for bottom bar
 
-    # Placeholder styling - gray italic
+    # Placeholder styling - gray italic, status bar
     style = Style.from_dict({
         'placeholder': 'italic #888888',
+        'status': '#888888',
+        'status.key': 'bold #ffffff',
     })
+
+    # Status bar at bottom
+    def get_statusbar_text() -> list[tuple[str, str]]:
+        """Generate status bar text."""
+        return [
+            ('class:status.key', ' Ctrl+D '),
+            ('class:status', 'Save  '),
+            ('class:status.key', 'Ctrl+C '),
+            ('class:status', 'Cancel  '),
+            ('class:status', ai_status),
+        ]
+
+    status_bar = Window(
+        content=FormattedTextControl(get_statusbar_text),
+        height=1,
+    )
 
     # Idle detection background task
     async def check_idle() -> None:
         """Monitor idle time and update placeholder."""
-        nonlocal last_activity
+        nonlocal last_activity, ai_status
 
         while True:
             await asyncio.sleep(1)  # Check every second
@@ -188,6 +208,9 @@ async def _run_interactive_editor(
             idle_duration = asyncio.get_event_loop().time() - last_activity
 
             if idle_duration >= idle_threshold:
+                # Show loading indicator
+                ai_status = "  ⏳ Thinking..."
+
                 # Get AI-generated placeholder
                 try:
                     placeholder_text = await prompter.get_placeholder_text(
@@ -196,6 +219,9 @@ async def _run_interactive_editor(
                         recent_entries=recent_entries
                     )
 
+                    # Clear loading indicator
+                    ai_status = ""
+
                     # Set placeholder with italic gray styling
                     if placeholder_text:
                         text_area.placeholder = FormattedText([
@@ -203,6 +229,7 @@ async def _run_interactive_editor(
                         ])
                 except Exception as e:
                     logger.debug("Failed to generate placeholder: %s", e)
+                    ai_status = ""  # Clear loading on error
                     # Silent failure - editor continues working
 
     # On text change, reset idle timer and clear placeholder
@@ -226,9 +253,14 @@ async def _run_interactive_editor(
         """Cancel without saving."""
         event.app.exit(result=None)
 
-    # Create application
+    # Create application with status bar at bottom
+    root_container = HSplit([
+        text_area,
+        status_bar,
+    ])
+
     app = Application(
-        layout=Layout(text_area),
+        layout=Layout(root_container),
         key_bindings=kb,
         style=style,
         full_screen=False,
@@ -264,6 +296,9 @@ def write() -> None:
     Press Ctrl+D to save, Ctrl+C to cancel.
     """
     _display_greeting()
+
+    # Show brief instructions
+    console.print("[dim]Starting editor... (Ctrl+D to save, Ctrl+C to cancel)[/dim]\n")
 
     # Get recent entries for context
     recent_entries = journal.get_recent_entries(limit=5)
