@@ -5,14 +5,21 @@ Uses PBKDF2 for key derivation with OWASP-recommended iteration count.
 """
 
 import base64
+import json
 import logging
 import os
+import shutil
+import time
+from datetime import datetime, timedelta
+from pathlib import Path
 from typing import NamedTuple
 
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+
+from companion.models import RotationMetadata, RotationResult
 
 logger = logging.getLogger(__name__)
 
@@ -254,3 +261,222 @@ def decrypt_entry_from_dict(data: dict[str, str], passphrase: str) -> str:
 
     encrypted = salt + nonce + ciphertext
     return decrypt_entry(encrypted, passphrase)
+
+
+def verify_passphrase(passphrase: str, encrypted_file: Path) -> bool:
+    """Test if passphrase can decrypt a file.
+
+    Args:
+        passphrase: Passphrase to verify
+        encrypted_file: Sample encrypted file to test
+
+    Returns:
+        True if passphrase works, False otherwise
+
+    Example:
+        >>> from pathlib import Path
+        >>> # Create test file
+        >>> test_file = Path("test.enc")
+        >>> test_file.write_bytes(encrypt_entry("test", "pass123"))
+        >>> verify_passphrase("pass123", test_file)
+        True
+        >>> verify_passphrase("wrong", test_file)
+        False
+    """
+    try:
+        with open(encrypted_file, "rb") as f:
+            encrypted = f.read()
+        decrypt_entry(encrypted, passphrase)
+        return True
+    except Exception:
+        return False
+
+
+def rotate_keys(
+    old_passphrase: str,
+    new_passphrase: str,
+    entries_dir: Path,
+    backup_dir: Path | None = None,
+) -> RotationResult:
+    """Rotate encryption keys for all entries.
+
+    Process:
+    1. Verify old passphrase
+    2. Create backup (optional)
+    3. For each entry:
+       - Decrypt with old passphrase
+       - Re-encrypt with new passphrase
+       - Atomic replace
+    4. Update rotation metadata
+    5. Return results
+
+    Args:
+        old_passphrase: Current passphrase
+        new_passphrase: New passphrase
+        entries_dir: Directory containing encrypted entries
+        backup_dir: Optional backup location
+
+    Returns:
+        RotationResult with status and statistics
+
+    Raises:
+        ValueError: If old passphrase is incorrect
+
+    Example:
+        >>> from pathlib import Path
+        >>> entries = Path("entries")
+        >>> backup = Path("backup")
+        >>> result = rotate_keys("old", "new", entries, backup)
+        >>> result.success
+        True
+    """
+    start_time = time.time()
+    rotated = 0
+    failed = 0
+    errors = []
+
+    # Get all encrypted entry files
+    entry_files = list(entries_dir.glob("*.json"))
+
+    if not entry_files:
+        return RotationResult(
+            success=True, entries_rotated=0, errors=["No encrypted entries found"]
+        )
+
+    # Verify old passphrase works
+    if not verify_passphrase(old_passphrase, entry_files[0]):
+        return RotationResult(
+            success=False, entries_rotated=0, errors=["Old passphrase is incorrect"]
+        )
+
+    # Create backup if requested
+    if backup_dir:
+        backup_dir.mkdir(parents=True, exist_ok=True)
+        for entry_file in entry_files:
+            shutil.copy2(entry_file, backup_dir / entry_file.name)
+        logger.info("Created backup in %s", backup_dir)
+
+    # Rotate each entry
+    for entry_file in entry_files:
+        try:
+            # Read encrypted data
+            with open(entry_file, "rb") as f:
+                old_encrypted = f.read()
+
+            # Decrypt with old passphrase
+            decrypted = decrypt_entry(old_encrypted, old_passphrase)
+
+            # Re-encrypt with new passphrase
+            new_encrypted = encrypt_entry(decrypted, new_passphrase)
+
+            # Atomic replace
+            temp_file = entry_file.with_suffix(".tmp")
+            with open(temp_file, "wb") as f:
+                f.write(new_encrypted)
+            temp_file.replace(entry_file)
+
+            rotated += 1
+            logger.debug("Rotated key for %s", entry_file.name)
+
+        except Exception as e:
+            failed += 1
+            error_msg = f"{entry_file.name}: {e!s}"
+            errors.append(error_msg)
+            logger.error("Failed to rotate %s: %s", entry_file.name, e)
+
+    duration = time.time() - start_time
+
+    logger.info(
+        "Key rotation complete: %d succeeded, %d failed in %.2fs",
+        rotated,
+        failed,
+        duration,
+    )
+
+    return RotationResult(
+        success=(failed == 0),
+        entries_rotated=rotated,
+        entries_failed=failed,
+        errors=errors,
+        duration_seconds=duration,
+    )
+
+
+def get_rotation_metadata(config_dir: Path) -> RotationMetadata | None:
+    """Load rotation metadata from file.
+
+    Args:
+        config_dir: Configuration directory
+
+    Returns:
+        RotationMetadata if file exists, None otherwise
+
+    Example:
+        >>> from pathlib import Path
+        >>> config = Path(".companion")
+        >>> metadata = get_rotation_metadata(config)
+        >>> metadata is None or isinstance(metadata, RotationMetadata)
+        True
+    """
+    metadata_file = config_dir / "rotation_metadata.json"
+    if not metadata_file.exists():
+        return None
+
+    try:
+        with open(metadata_file) as f:
+            data = json.load(f)
+        return RotationMetadata(**data)
+    except Exception as e:
+        logger.error("Failed to load rotation metadata: %s", e)
+        return None
+
+
+def save_rotation_metadata(metadata: RotationMetadata, config_dir: Path) -> None:
+    """Save rotation metadata to file.
+
+    Args:
+        metadata: Rotation metadata to save
+        config_dir: Configuration directory
+
+    Example:
+        >>> from pathlib import Path
+        >>> from datetime import datetime, timedelta
+        >>> config = Path(".companion")
+        >>> metadata = RotationMetadata(
+        ...     last_rotation=datetime.now(),
+        ...     rotation_interval_days=90,
+        ...     next_rotation_due=datetime.now() + timedelta(days=90),
+        ...     total_rotations=1
+        ... )
+        >>> save_rotation_metadata(metadata, config)
+    """
+    metadata_file = config_dir / "rotation_metadata.json"
+    try:
+        with open(metadata_file, "w") as f:
+            json.dump(metadata.model_dump(mode="json"), f, indent=2, default=str)
+        logger.info("Saved rotation metadata to %s", metadata_file)
+    except Exception as e:
+        logger.error("Failed to save rotation metadata: %s", e)
+
+
+def should_rotate(config_dir: Path, rotation_interval_days: int = 90) -> bool:
+    """Check if rotation is due.
+
+    Args:
+        config_dir: Configuration directory
+        rotation_interval_days: Days between rotations (default: 90)
+
+    Returns:
+        True if rotation is due or overdue
+
+    Example:
+        >>> from pathlib import Path
+        >>> config = Path(".companion")
+        >>> should_rotate(config)  # Returns True if >90 days since last rotation
+        False
+    """
+    metadata = get_rotation_metadata(config_dir)
+    if not metadata:
+        return False  # No previous rotation
+
+    return datetime.now() >= metadata.next_rotation_due

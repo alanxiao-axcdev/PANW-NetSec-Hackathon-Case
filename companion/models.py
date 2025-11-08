@@ -3,15 +3,12 @@
 All data structures using Pydantic for validation and serialization.
 """
 
-from datetime import date
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
-from pydantic import Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Sentiment(BaseModel):
@@ -44,7 +41,7 @@ class Theme(BaseModel):
 
 class JournalEntry(BaseModel):
     """Single journal entry with metadata and analysis.
-    
+
     Attributes:
         id: Unique identifier
         timestamp: When entry was created
@@ -78,7 +75,7 @@ class JournalEntry(BaseModel):
 
 class AnalysisResult(BaseModel):
     """Results from post-session analysis.
-    
+
     Attributes:
         entry_id: ID of analyzed entry
         sentiment: Detected sentiment
@@ -98,7 +95,7 @@ class AnalysisResult(BaseModel):
 
 class Summary(BaseModel):
     """Weekly or monthly journal summary.
-    
+
     Attributes:
         period: Summary period (week or month)
         start_date: Period start date
@@ -150,7 +147,7 @@ class Config(BaseModel):
 
 class PIIMatch(BaseModel):
     """Detected PII in text.
-    
+
     Attributes:
         type: Type of PII (SSN, email, phone, etc.)
         value: Detected value
@@ -168,7 +165,7 @@ class PIIMatch(BaseModel):
 
 class InjectionRisk(BaseModel):
     """Prompt injection risk assessment.
-    
+
     Attributes:
         level: Risk level (LOW, MEDIUM, HIGH)
         score: Risk score (0.0 to 1.0)
@@ -184,7 +181,7 @@ class InjectionRisk(BaseModel):
 
 class PoisoningRisk(BaseModel):
     """Data poisoning risk assessment.
-    
+
     Attributes:
         level: Risk level (LOW, MEDIUM, HIGH)
         score: Risk score (0.0 to 1.0)
@@ -200,7 +197,7 @@ class PoisoningRisk(BaseModel):
 
 class HealthStatus(BaseModel):
     """Health check result.
-    
+
     Attributes:
         component: Component being checked
         status: Health status (OK, DEGRADED, DOWN)
@@ -216,7 +213,7 @@ class HealthStatus(BaseModel):
 
 class ProviderHealth(BaseModel):
     """AI provider health status.
-    
+
     Attributes:
         provider_name: Name of the provider
         is_initialized: Whether provider is ready
@@ -230,3 +227,37 @@ class ProviderHealth(BaseModel):
     model_loaded: bool = False
     last_inference_time: float | None = None
     error_count: int = 0
+
+
+class RotationMetadata(BaseModel):
+    """Key rotation metadata.
+
+    Attributes:
+        last_rotation: When keys were last rotated
+        rotation_interval_days: Days between rotations
+        next_rotation_due: When next rotation is due
+        total_rotations: Count of rotations performed
+    """
+
+    last_rotation: datetime
+    rotation_interval_days: int = 90
+    next_rotation_due: datetime
+    total_rotations: int = 0
+
+
+class RotationResult(BaseModel):
+    """Result of key rotation operation.
+
+    Attributes:
+        success: Whether rotation succeeded
+        entries_rotated: Number of entries re-encrypted
+        entries_failed: Number that failed
+        errors: List of errors encountered
+        duration_seconds: How long rotation took
+    """
+
+    success: bool
+    entries_rotated: int
+    entries_failed: int = 0
+    errors: list[str] = Field(default_factory=list)
+    duration_seconds: float = 0.0

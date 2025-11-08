@@ -414,6 +414,93 @@ def metrics() -> None:
         sys.exit(1)
 
 
+@main.command("rotate-keys")
+def rotate_keys_cmd() -> None:
+    """Rotate encryption keys for all journal entries.
+
+    This command will:
+    1. Prompt for current and new passphrases
+    2. Create a backup of all encrypted entries
+    3. Re-encrypt all entries with the new passphrase
+    4. Update rotation metadata
+
+    This limits exposure if your passphrase is compromised.
+    """
+    from datetime import timedelta
+
+    from rich.prompt import Prompt
+
+    from companion.security.encryption import (
+        get_rotation_metadata,
+        rotate_keys,
+        save_rotation_metadata,
+    )
+
+    console.print("\n[yellow]⚠️  Key Rotation[/yellow]")
+    console.print("This will re-encrypt all journal entries with a new passphrase.")
+    console.print("This limits exposure if your passphrase is compromised.\n")
+
+    # Get passphrases
+    old_pass = Prompt.ask("Current passphrase", password=True)
+    new_pass = Prompt.ask("New passphrase", password=True)
+    confirm = Prompt.ask("Confirm new passphrase", password=True)
+
+    if new_pass != confirm:
+        console.print("[red]❌ Passphrases don't match. Aborted.[/red]")
+        sys.exit(1)
+
+    # Get paths
+    cfg = config.load_config()
+    entries_dir = cfg.data_directory / "entries"
+    backup_dir = cfg.data_directory / f"backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+
+    if not entries_dir.exists():
+        console.print("[yellow]⚠️  No entries directory found. Nothing to rotate.[/yellow]")
+        sys.exit(0)
+
+    # Show backup location
+    console.print(f"\n[dim]Creating backup: {backup_dir}[/dim]")
+
+    # Rotate
+    with console.status("[bold green]Rotating keys..."):
+        result = rotate_keys(old_pass, new_pass, entries_dir, backup_dir)
+
+    # Show results
+    console.print()
+    if result.success:
+        console.print("[green]✓ Rotation complete[/green]")
+        console.print(f"  Entries rotated: {result.entries_rotated}")
+        console.print(f"  Duration: {result.duration_seconds:.1f} seconds")
+        console.print(f"  Backup: {backup_dir}")
+
+        # Update rotation metadata
+        now = datetime.now()
+        next_due = now + timedelta(days=90)
+        metadata = get_rotation_metadata(cfg.data_directory)
+        total = metadata.total_rotations + 1 if metadata else 1
+
+        from companion.models import RotationMetadata
+
+        new_metadata = RotationMetadata(
+            last_rotation=now,
+            rotation_interval_days=90,
+            next_rotation_due=next_due,
+            total_rotations=total,
+        )
+        save_rotation_metadata(new_metadata, cfg.data_directory)
+
+        console.print(f"\n[dim]Next rotation due: {next_due.strftime('%Y-%m-%d')} (90 days)[/dim]")
+    else:
+        console.print("[red]❌ Rotation failed[/red]")
+        console.print(f"  Entries rotated: {result.entries_rotated}")
+        console.print(f"  Entries failed: {result.entries_failed}")
+        for error in result.errors[:5]:
+            console.print(f"  - {error}")
+        if len(result.errors) > 5:
+            console.print(f"  ... and {len(result.errors) - 5} more errors")
+        sys.exit(1)
+
+
 @main.command()
 def version() -> None:
     """Show Companion version information."""
