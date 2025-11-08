@@ -23,6 +23,7 @@ def mock_config():
         mock_cfg = MagicMock()
         mock_cfg.first_run_complete = True
         mock_cfg.data_directory = MagicMock()
+        mock_cfg.editor_idle_threshold = 15  # Default value
         mock.load_config.return_value = mock_cfg
         yield mock
 
@@ -66,38 +67,86 @@ class TestWriteCommand:
     """Tests for write command."""
 
     def test_write_entry_basic(self, runner, mock_config, mock_journal, mock_analyzer):
-        """Test writing a basic entry."""
-        # Mock input
-        test_content = "Today was a good day.\nI learned something new."
+        """Test writing a basic entry with interactive editor."""
+        # Mock the interactive editor to return content and duration
+        with patch('companion.cli._run_interactive_editor') as mock_editor:
+            test_content = "Today was a good day.\nI learned something new."
+            mock_editor.return_value = (test_content, 45)  # 45 seconds
 
-        # Mock journal.save_entry
-        mock_journal.save_entry.return_value = "test-entry-id"
+            # Mock journal.save_entry
+            mock_journal.save_entry.return_value = "test-entry-id"
 
-        # Mock async analysis (will be skipped in test due to exception)
-        mock_analyzer.analyze_sentiment.side_effect = RuntimeError("Mock error")
+            # Mock async analysis (will be skipped in test due to exception)
+            mock_analyzer.analyze_sentiment.side_effect = RuntimeError("Mock error")
 
-        result = runner.invoke(cli.write, input=test_content + "\n")
+            result = runner.invoke(cli.write)
 
-        # Should succeed even if analysis fails
-        assert result.exit_code == 0
-        assert mock_journal.save_entry.called
-        assert "Entry saved" in result.output or "saved" in result.output.lower()
+            # Should succeed even if analysis fails
+            assert result.exit_code == 0
+            assert mock_journal.save_entry.called
+
+            # Verify entry saved with duration
+            saved_entry = mock_journal.save_entry.call_args[0][0]
+            assert saved_entry.duration_seconds == 45
+
+            assert "Entry saved" in result.output or "saved" in result.output.lower()
 
     def test_write_entry_empty(self, runner, mock_config, mock_journal):
         """Test that empty entry is not saved."""
-        result = runner.invoke(cli.write, input="\n")
+        with patch('companion.cli._run_interactive_editor') as mock_editor:
+            mock_editor.return_value = ("", 10)  # Empty content
 
-        assert result.exit_code == 0
-        assert not mock_journal.save_entry.called
-        assert "Empty entry" in result.output or "not saved" in result.output.lower()
+            result = runner.invoke(cli.write)
+
+            assert result.exit_code == 0
+            assert not mock_journal.save_entry.called
+            assert "Empty entry" in result.output or "not saved" in result.output.lower()
 
     def test_write_entry_cancel(self, runner, mock_config, mock_journal):
         """Test canceling entry with Ctrl+C."""
-        # Simulate KeyboardInterrupt
-        _ = runner.invoke(cli.write, input="", catch_exceptions=False)
+        with patch('companion.cli._run_interactive_editor') as mock_editor:
+            mock_editor.return_value = (None, 0)  # Cancelled
 
-        # Exit code may vary, but entry should not be saved
-        assert not mock_journal.save_entry.called
+            result = runner.invoke(cli.write)
+
+            # Entry should not be saved
+            assert not mock_journal.save_entry.called
+            assert "cancelled" in result.output.lower()
+
+    def test_write_uses_config_idle_threshold(self, runner, mock_config, mock_journal):
+        """Test that write command uses idle_threshold from config."""
+        # Set custom idle threshold in config object
+        mock_config.load_config.return_value.editor_idle_threshold = 20
+
+        with patch('companion.cli._run_interactive_editor') as mock_editor:
+            mock_editor.return_value = ("Test content", 30)
+
+            result = runner.invoke(cli.write)
+
+            # Verify editor was called with threshold from config
+            mock_editor.assert_called_once()
+            call_kwargs = mock_editor.call_args[1]
+            assert call_kwargs['idle_threshold'] == 20
+
+    def test_write_tracks_duration(self, runner, mock_config, mock_journal, mock_analyzer):
+        """Test that write command saves entry with tracked duration."""
+        with patch('companion.cli._run_interactive_editor') as mock_editor:
+            mock_editor.return_value = ("Test content", 67)  # 67 seconds
+
+            # Mock analysis to avoid errors
+            mock_analyzer.analyze_sentiment.side_effect = RuntimeError("Mock")
+
+            result = runner.invoke(cli.write)
+
+            # Verify save_entry was called
+            assert mock_journal.save_entry.called
+
+            # Verify entry has correct duration
+            saved_entry = mock_journal.save_entry.call_args[0][0]
+            assert saved_entry.duration_seconds == 67
+
+            # Verify output shows duration in minutes
+            assert result.exit_code == 0
 
 
 class TestListCommand:
