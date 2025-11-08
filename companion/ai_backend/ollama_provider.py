@@ -6,7 +6,6 @@ Requires Ollama to be running separately.
 
 import logging
 import time
-from typing import Any
 
 import httpx
 
@@ -71,7 +70,8 @@ class OllamaProvider(AIProvider):
 
         except Exception as e:
             logger.error("Failed to initialize OllamaProvider: %s", e)
-            raise RuntimeError(f"Ollama not reachable at {self.base_url}: {e}") from e
+            msg = f"Ollama not reachable at {self.base_url}: {e}"
+            raise RuntimeError(msg) from e
 
     async def generate(self, prompt: str, max_tokens: int = 100) -> str:
         """Generate text using Ollama API.
@@ -88,7 +88,8 @@ class OllamaProvider(AIProvider):
             ValueError: If prompt is empty
         """
         if not prompt:
-            raise ValueError("Prompt cannot be empty")
+            msg = "Prompt cannot be empty"
+            raise ValueError(msg)
 
         if not self.is_initialized or not self.client:
             await self.initialize()
@@ -129,7 +130,8 @@ class OllamaProvider(AIProvider):
         except Exception as e:
             self.error_count += 1
             logger.error("Ollama generation failed: %s", e)
-            raise RuntimeError(f"Ollama generation failed: {e}") from e
+            msg = f"Ollama generation failed: {e}"
+            raise RuntimeError(msg) from e
 
     async def embed(self, text: str) -> list[float]:
         """Generate embedding using Ollama API.
@@ -145,7 +147,8 @@ class OllamaProvider(AIProvider):
             ValueError: If text is empty
         """
         if not text:
-            raise ValueError("Text cannot be empty")
+            msg = "Text cannot be empty"
+            raise ValueError(msg)
 
         if not self.is_initialized or not self.client:
             await self.initialize()
@@ -170,7 +173,8 @@ class OllamaProvider(AIProvider):
         except Exception as e:
             self.error_count += 1
             logger.error("Ollama embedding failed: %s", e)
-            raise RuntimeError(f"Ollama embedding failed: {e}") from e
+            msg = f"Ollama embedding failed: {e}"
+            raise RuntimeError(msg) from e
 
     def get_health(self) -> ProviderHealth:
         """Get Ollama provider health status.

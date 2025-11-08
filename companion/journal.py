@@ -5,16 +5,11 @@ All entries are stored as JSON files with automatic timestamp-based filenames.
 """
 
 import logging
-from datetime import date
-from datetime import datetime
-from datetime import timedelta
-from pathlib import Path
+from datetime import date, datetime
 
 from companion.config import load_config
 from companion.models import JournalEntry
-from companion.storage import list_entry_files
-from companion.storage import read_json
-from companion.storage import write_json
+from companion.storage import list_entry_files, read_json, write_json
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +81,8 @@ def get_entry(entry_id: str) -> JournalEntry | None:
                 return JournalEntry(**entry_dict)
             except Exception as e:
                 logger.error("Failed to load entry from %s: %s", file_path, e)
-                raise ValueError(f"Invalid entry data in {file_path}") from e
+                msg = f"Invalid entry data in {file_path}"
+                raise ValueError(msg) from e
 
     logger.debug("Entry not found: %s", entry_id)
     return None

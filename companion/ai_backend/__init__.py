@@ -11,8 +11,8 @@ from companion.ai_backend.qwen_provider import QwenProvider
 
 __all__ = [
     "AIProvider",
-    "QwenProvider",
+    "MockProvider",
     "OllamaProvider",
     "OpenAIProvider",
-    "MockProvider",
+    "QwenProvider",
 ]

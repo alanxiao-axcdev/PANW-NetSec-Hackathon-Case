@@ -6,7 +6,6 @@ current time, and idle duration to encourage reflection.
 
 import logging
 from datetime import datetime
-from datetime import time
 
 from companion import ai_engine
 from companion.models import JournalEntry
@@ -72,14 +71,13 @@ def _get_time_context(current_time: datetime) -> str:
 
     if hour < 6:
         return "late night"
-    elif hour < 12:
+    if hour < 12:
         return "morning"
-    elif hour < 17:
+    if hour < 17:
         return "afternoon"
-    elif hour < 21:
+    if hour < 21:
         return "evening"
-    else:
-        return "night"
+    return "night"
 
 
 def _get_theme_context(entries: list[JournalEntry]) -> str:
@@ -123,12 +121,11 @@ def _get_fallback_prompt(current_time: datetime) -> str:
 
     if hour < 12:
         return "What are you looking forward to today?"
-    elif hour < 17:
+    if hour < 17:
         return "How is your day going so far?"
-    elif hour < 21:
+    if hour < 21:
         return "What was the best part of your day?"
-    else:
-        return "What are you grateful for today?"
+    return "What are you grateful for today?"
 
 
 async def get_continuation_prompt(current_text: str) -> str:
@@ -246,20 +243,19 @@ async def get_time_based_prompt(hour: int | None = None) -> str:
 
     if hour < 6:
         return "What's keeping you up tonight?"
-    elif hour < 9:
+    if hour < 9:
         return "What are your intentions for today?"
-    elif hour < 12:
+    if hour < 12:
         return "How's your morning going?"
-    elif hour < 14:
+    if hour < 14:
         return "What's on your mind this afternoon?"
-    elif hour < 17:
+    if hour < 17:
         return "How is your day unfolding?"
-    elif hour < 20:
+    if hour < 20:
         return "What stood out to you today?"
-    elif hour < 23:
+    if hour < 23:
         return "How are you feeling this evening?"
-    else:
-        return "What's on your mind as the day ends?"
+    return "What's on your mind as the day ends?"
 
 
 async def generate_followup_prompts(entry: JournalEntry, count: int = 3) -> list[str]:

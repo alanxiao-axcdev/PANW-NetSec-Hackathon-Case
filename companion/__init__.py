@@ -12,20 +12,20 @@ __email__ = "your.email@example.com"
 
 # Public API exports
 from companion.models import (
-    JournalEntry,
-    Sentiment,
-    Theme,
-    Summary,
     AnalysisResult,
     Config,
+    JournalEntry,
+    Sentiment,
+    Summary,
+    Theme,
 )
 
 __all__ = [
-    "JournalEntry",
-    "Sentiment",
-    "Theme",
-    "Summary",
     "AnalysisResult",
     "Config",
+    "JournalEntry",
+    "Sentiment",
+    "Summary",
+    "Theme",
     "__version__",
 ]

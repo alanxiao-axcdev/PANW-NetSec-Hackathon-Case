@@ -6,16 +6,12 @@ emotional trends, and key insights across time periods.
 
 import logging
 from collections import Counter
-from datetime import date
-from datetime import datetime
-from datetime import timedelta
+from datetime import date, timedelta
 from typing import Literal
 
 from companion import ai_engine
-from companion.analyzer import get_dominant_themes
-from companion.analyzer import get_emotional_trend
-from companion.models import JournalEntry
-from companion.models import Summary
+from companion.analyzer import get_dominant_themes, get_emotional_trend
+from companion.models import JournalEntry, Summary
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +53,7 @@ async def generate_summary(
     emotional_trend_data = await get_emotional_trend(entries)
     emotional_trend_text = _format_emotional_trend(emotional_trend_data)
 
-    patterns = await identify_patterns(entries)
+    await identify_patterns(entries)
 
     insights = await _generate_insights(entries, period)
 
@@ -97,12 +93,11 @@ def _format_emotional_trend(trend_data: dict[str, float]) -> str:
 
     if positive_pct > 50:
         return f"Mostly positive ({positive_pct:.0f}% positive, {negative_pct:.0f}% negative)"
-    elif negative_pct > 50:
+    if negative_pct > 50:
         return f"Mostly challenging ({negative_pct:.0f}% negative, {positive_pct:.0f}% positive)"
-    elif neutral_pct > 50:
+    if neutral_pct > 50:
         return f"Generally balanced ({neutral_pct:.0f}% neutral)"
-    else:
-        return f"Mixed emotions (positive: {positive_pct:.0f}%, neutral: {neutral_pct:.0f}%, negative: {negative_pct:.0f}%)"
+    return f"Mixed emotions (positive: {positive_pct:.0f}%, neutral: {neutral_pct:.0f}%, negative: {negative_pct:.0f}%)"
 
 
 async def identify_patterns(entries: list[JournalEntry]) -> list[str]:

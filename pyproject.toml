@@ -35,26 +35,22 @@ dependencies = [
     "click>=8.1.0",
     "rich>=13.0.0",
     "prompt-toolkit>=3.0.0",
-    
     # Data validation
     "pydantic>=2.0.0",
-    
     # AI/ML
     "transformers>=4.35.0",
     "torch>=2.0.0",
     "optimum>=1.14.0",
     "sentence-transformers>=2.2.0",
-    
     # Security
     "cryptography>=41.0.0",
     "presidio-analyzer>=2.2.0",
     "presidio-anonymizer>=2.2.0",
-    
     # Monitoring
     "psutil>=5.9.0",
-    
     # Utilities
     "tqdm>=4.66.0",
+    "httpx>=0.28.1",
 ]
 
 [project.optional-dependencies]
@@ -168,4 +164,10 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
     "@abstractmethod",
+]
+
+[dependency-groups]
+dev = [
+    "pytest-asyncio>=1.2.0",
+    "ruff>=0.14.4",
 ]

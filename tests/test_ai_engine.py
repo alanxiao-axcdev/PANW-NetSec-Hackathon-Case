@@ -23,7 +23,9 @@ async def test_initialize_model(reset_engine):
 
     assert ai_engine.is_initialized()
     assert ai_engine._provider is not None
-    assert isinstance(ai_engine._provider, MockProvider)
+    # Can be Qwen or Mock depending on whether transformers is installed
+    from companion.ai_backend.base import AIProvider
+    assert isinstance(ai_engine._provider, AIProvider)
 
 
 @pytest.mark.asyncio

@@ -6,13 +6,10 @@ from journal content.
 
 import asyncio
 import logging
-import re
 from collections import Counter
 
 from companion import ai_engine
-from companion.models import JournalEntry
-from companion.models import Sentiment
-from companion.models import Theme
+from companion.models import JournalEntry, Sentiment, Theme
 
 logger = logging.getLogger(__name__)
 
@@ -90,9 +87,8 @@ def _estimate_confidence(text: str, sentiment: str) -> float:
         intensity = 0
 
     base_confidence = 0.7
-    confidence = min(0.95, base_confidence + (intensity * 0.05))
+    return min(0.95, base_confidence + (intensity * 0.05))
 
-    return confidence
 
 
 async def extract_themes(text: str) -> list[Theme]:
@@ -154,9 +150,8 @@ def _theme_confidence(text: str, theme: str) -> float:
     occurrences = text_lower.count(theme_lower)
 
     base_confidence = 0.7
-    confidence = min(0.9, base_confidence + (occurrences * 0.05))
+    return min(0.9, base_confidence + (occurrences * 0.05))
 
-    return confidence
 
 
 async def get_emotional_trend(entries: list[JournalEntry]) -> dict[str, float]:

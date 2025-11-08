@@ -8,8 +8,7 @@ import asyncio
 import logging
 from typing import TYPE_CHECKING
 
-from companion.ai_backend import AIProvider
-from companion.ai_backend import MockProvider
+from companion.ai_backend import AIProvider, MockProvider
 from companion.config import load_config
 
 if TYPE_CHECKING:
@@ -56,20 +55,45 @@ async def initialize_model() -> None:
 def _get_provider(config: "Config") -> AIProvider:
     """Get AI provider based on configuration.
 
+    Defaults to Qwen for production use, with graceful fallback to mock.
+
     Args:
         config: Application configuration
 
     Returns:
         Configured AI provider instance
     """
-    provider_name = getattr(config, "ai_provider", "mock")
+    from companion.ai_backend.qwen_provider import QwenProvider
+    from companion.ai_backend.ollama_provider import OllamaProvider
 
-    if provider_name == "mock":
-        logger.info("Using mock AI provider")
+    # Default to qwen for real AI experience
+    provider_name = getattr(config, "ai_provider", "qwen")
+
+    if provider_name == "qwen":
+        try:
+            logger.info("Using Qwen AI provider (real model)")
+            return QwenProvider(model_name=config.model_name)
+        except Exception as e:
+            logger.warning("Qwen provider failed to initialize: %s, falling back to mock", e)
+            logger.info("Using mock provider for demo (install transformers+torch for real AI)")
+            return MockProvider()
+    elif provider_name == "ollama":
+        try:
+            logger.info("Using Ollama AI provider")
+            return OllamaProvider()
+        except Exception as e:
+            logger.warning("Ollama provider failed: %s, using mock", e)
+            return MockProvider()
+    elif provider_name == "mock":
+        logger.info("Using mock AI provider (testing mode)")
         return MockProvider()
 
-    logger.warning("Provider %s not implemented, falling back to mock", provider_name)
-    return MockProvider()
+    logger.warning("Provider %s not recognized, defaulting to Qwen", provider_name)
+    try:
+        return QwenProvider(model_name=config.model_name)
+    except Exception:
+        logger.info("Falling back to mock provider")
+        return MockProvider()
 
 
 async def generate_text(prompt: str, max_tokens: int = 200) -> str:

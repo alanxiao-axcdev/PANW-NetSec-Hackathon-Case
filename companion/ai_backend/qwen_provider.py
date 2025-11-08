@@ -92,7 +92,8 @@ class QwenProvider(AIProvider):
 
         except Exception as e:
             logger.error("Failed to initialize QwenProvider: %s", e)
-            raise RuntimeError(f"Qwen initialization failed: {e}") from e
+            msg = f"Qwen initialization failed: {e}"
+            raise RuntimeError(msg) from e
 
     async def generate(self, prompt: str, max_tokens: int = 100) -> str:
         """Generate text using Qwen model.
@@ -109,7 +110,8 @@ class QwenProvider(AIProvider):
             ValueError: If prompt is empty
         """
         if not prompt:
-            raise ValueError("Prompt cannot be empty")
+            msg = "Prompt cannot be empty"
+            raise ValueError(msg)
 
         if not self.is_initialized or not self.model or not self.tokenizer:
             await self.initialize()
@@ -153,7 +155,8 @@ class QwenProvider(AIProvider):
         except Exception as e:
             self.error_count += 1
             logger.error("Generation failed: %s", e)
-            raise RuntimeError(f"Qwen generation failed: {e}") from e
+            msg = f"Qwen generation failed: {e}"
+            raise RuntimeError(msg) from e
 
     async def embed(self, text: str) -> list[float]:
         """Generate embedding using Qwen model's hidden states.
@@ -169,7 +172,8 @@ class QwenProvider(AIProvider):
             ValueError: If text is empty
         """
         if not text:
-            raise ValueError("Text cannot be empty")
+            msg = "Text cannot be empty"
+            raise ValueError(msg)
 
         if not self.is_initialized or not self.model or not self.tokenizer:
             await self.initialize()
@@ -187,19 +191,24 @@ class QwenProvider(AIProvider):
                 outputs = self.model(**inputs, output_hidden_states=True)
                 # Use mean of last hidden state as embedding
                 last_hidden = outputs.hidden_states[-1]
+
+                # Convert from BFloat16 to Float32 if needed (compatibility)
+                if last_hidden.dtype == torch.bfloat16:
+                    last_hidden = last_hidden.float()
+
                 embedding = last_hidden.mean(dim=1).squeeze()
 
                 # Convert to list and normalize
-                embedding_list = embedding.cpu().numpy().tolist()
+                return embedding.cpu().numpy().tolist()
 
-            return embedding_list
 
         try:
             return await retry_with_backoff(_embed, max_retries=2)
         except Exception as e:
             self.error_count += 1
             logger.error("Embedding failed: %s", e)
-            raise RuntimeError(f"Qwen embedding failed: {e}") from e
+            msg = f"Qwen embedding failed: {e}"
+            raise RuntimeError(msg) from e
 
     def get_health(self) -> ProviderHealth:
         """Get Qwen provider health status.

@@ -5,8 +5,7 @@ across different backends (local models, API services, mocks).
 """
 
 import logging
-from abc import ABC
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 
 from companion.models import ProviderHealth
 
@@ -49,7 +48,6 @@ class AIProvider(ABC):
         Raises:
             RuntimeError: If initialization fails
         """
-        pass
 
     @abstractmethod
     async def generate(self, prompt: str, max_tokens: int = 100) -> str:
@@ -66,7 +64,6 @@ class AIProvider(ABC):
             RuntimeError: If generation fails
             ValueError: If prompt is empty or invalid
         """
-        pass
 
     @abstractmethod
     async def embed(self, text: str) -> list[float]:
@@ -82,7 +79,6 @@ class AIProvider(ABC):
             RuntimeError: If embedding fails
             ValueError: If text is empty
         """
-        pass
 
     @abstractmethod
     def get_health(self) -> ProviderHealth:
@@ -91,7 +87,6 @@ class AIProvider(ABC):
         Returns:
             ProviderHealth object with status information
         """
-        pass
 
     async def shutdown(self) -> None:
         """Clean up resources before shutdown.

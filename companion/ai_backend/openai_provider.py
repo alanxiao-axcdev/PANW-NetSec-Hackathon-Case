@@ -54,7 +54,8 @@ class OpenAIProvider(AIProvider):
             return
 
         if not self.api_key:
-            raise RuntimeError("OPENAI_API_KEY environment variable not set")
+            msg = "OPENAI_API_KEY environment variable not set"
+            raise RuntimeError(msg)
 
         try:
             # Import here to avoid dependency if not using this provider
@@ -66,7 +67,8 @@ class OpenAIProvider(AIProvider):
 
         except Exception as e:
             logger.error("Failed to initialize OpenAIProvider: %s", e)
-            raise RuntimeError(f"OpenAI initialization failed: {e}") from e
+            msg = f"OpenAI initialization failed: {e}"
+            raise RuntimeError(msg) from e
 
     async def generate(self, prompt: str, max_tokens: int = 100) -> str:
         """Generate text using OpenAI API.
@@ -83,7 +85,8 @@ class OpenAIProvider(AIProvider):
             ValueError: If prompt is empty
         """
         if not prompt:
-            raise ValueError("Prompt cannot be empty")
+            msg = "Prompt cannot be empty"
+            raise ValueError(msg)
 
         if not self.is_initialized or not self.client:
             await self.initialize()
@@ -113,7 +116,8 @@ class OpenAIProvider(AIProvider):
         except Exception as e:
             self.error_count += 1
             logger.error("OpenAI generation failed: %s", e)
-            raise RuntimeError(f"OpenAI generation failed: {e}") from e
+            msg = f"OpenAI generation failed: {e}"
+            raise RuntimeError(msg) from e
 
     async def embed(self, text: str) -> list[float]:
         """Generate embedding using OpenAI API.
@@ -129,7 +133,8 @@ class OpenAIProvider(AIProvider):
             ValueError: If text is empty
         """
         if not text:
-            raise ValueError("Text cannot be empty")
+            msg = "Text cannot be empty"
+            raise ValueError(msg)
 
         if not self.is_initialized or not self.client:
             await self.initialize()
@@ -149,7 +154,8 @@ class OpenAIProvider(AIProvider):
         except Exception as e:
             self.error_count += 1
             logger.error("OpenAI embedding failed: %s", e)
-            raise RuntimeError(f"OpenAI embedding failed: {e}") from e
+            msg = f"OpenAI embedding failed: {e}"
+            raise RuntimeError(msg) from e
 
     def get_health(self) -> ProviderHealth:
         """Get OpenAI provider health status.
