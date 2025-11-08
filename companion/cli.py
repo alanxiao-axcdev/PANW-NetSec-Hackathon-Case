@@ -18,6 +18,11 @@ from companion import analyzer, config, journal, summarizer
 from companion.models import JournalEntry
 from companion.monitoring import dashboard, health
 from companion.security.audit import decrypt_audit_log, verify_audit_log_integrity
+from companion.security.passphrase import (
+    PassphraseStrength,
+    check_passphrase_strength,
+    is_passphrase_acceptable,
+)
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -55,6 +60,15 @@ def _first_run_wizard() -> None:
     config.initialize_directories()
 
     console.print("✅ All set! Your journal is ready.\n", style="bold green")
+
+    # Passphrase setup (informational only for MVP - actual encryption setup happens on first write)
+    console.print("[bold cyan]🔒 Passphrase Security[/bold cyan]")
+    console.print("\nYour journal entries will be encrypted. When you write your first entry,")
+    console.print("you'll create a strong passphrase. Here's what makes a strong passphrase:\n")
+    console.print("  • [green]Minimum 12 characters[/green] (16+ recommended)")
+    console.print("  • [green]Use varied characters[/green] (letters, numbers, symbols)")
+    console.print("  • [green]Avoid common passwords[/green] (we check against breach databases)")
+    console.print("  • [green]Make it memorable[/green] (e.g., 'my-secure-journal-2025!')\n")
 
     # Mark first run complete
     cfg.first_run_complete = True
@@ -442,9 +456,44 @@ def rotate_keys_cmd() -> None:
     console.print("This will re-encrypt all journal entries with a new passphrase.")
     console.print("This limits exposure if your passphrase is compromised.\n")
 
-    # Get passphrases
+    # Get current passphrase
     old_pass = Prompt.ask("Current passphrase", password=True)
-    new_pass = Prompt.ask("New passphrase", password=True)
+
+    # Get new passphrase with strength checking
+    while True:
+        new_pass = Prompt.ask("New passphrase", password=True)
+
+        # Check strength
+        score = check_passphrase_strength(new_pass)
+
+        # Display strength feedback
+        if score.strength == PassphraseStrength.WEAK:
+            console.print(f"[yellow]⚠️  Weak passphrase (score: {score.score}/100)[/yellow]")
+            for suggestion in score.feedback:
+                console.print(f"  • {suggestion}")
+        elif score.strength == PassphraseStrength.MEDIUM:
+            console.print(f"[yellow]Medium strength (score: {score.score}/100)[/yellow]")
+            for suggestion in score.feedback[:3]:  # Show top 3 suggestions
+                console.print(f"  • {suggestion}")
+        else:
+            console.print(f"[green]✓ {score.strength.value.replace('_', ' ').title()} passphrase (score: {score.score}/100)[/green]")
+            console.print(f"  Entropy: {score.entropy_bits:.1f} bits\n")
+
+        # Check if acceptable
+        acceptable, reason = is_passphrase_acceptable(new_pass)
+        if not acceptable:
+            console.print(f"[red]❌ Passphrase rejected: {reason}[/red]\n")
+            continue
+
+        # Warn if weak but acceptable
+        if score.strength == PassphraseStrength.WEAK:
+            if not click.confirm("\nThis passphrase is weak. Use it anyway?", default=False):
+                console.print("[dim]Let's try a stronger passphrase...\n[/dim]")
+                continue
+
+        break
+
+    # Confirm new passphrase
     confirm = Prompt.ask("Confirm new passphrase", password=True)
 
     if new_pass != confirm:
