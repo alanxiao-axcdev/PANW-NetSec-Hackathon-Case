@@ -1,0 +1,11 @@
+# Add at top of cli.py after imports:
+import logging
+
+# Configure logging to suppress verbose messages in CLI
+logging.basicConfig(
+    level=logging.ERROR,  # Only show errors, not warnings/debug
+    format='%(message)s'  # Simple format for user-facing messages
+)
+
+# Suppress transformers warnings
+logging.getLogger("transformers").setLevel(logging.ERROR)

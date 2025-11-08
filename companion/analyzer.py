@@ -133,7 +133,8 @@ async def extract_themes(text: str) -> list[Theme]:
 
 Entry: "{text[:500]}"
 
-List 2-4 themes as comma-separated single words (e.g., work, family, health, stress).
+Respond with 2-4 comma-separated single words ONLY (no explanations, no sentences).
+Examples: "work, stress, family" or "health, exercise, motivation"
 
 Your response (comma-separated words only):"""
 
@@ -142,7 +143,7 @@ Your response (comma-separated words only):"""
 
         # Clean response: extract only the comma-separated words
         # Remove any sentences or extra text
-        response_clean = response.strip()
+        response_clean = response.strip().lower()
 
         # If response has newlines or periods, take only first line/sentence
         if '\n' in response_clean:
@@ -150,7 +151,17 @@ Your response (comma-separated words only):"""
         if '.' in response_clean and response_clean.index('.') < 50:
             response_clean = response_clean.split('.')[0]
 
-        theme_names = [t.strip().lower() for t in response_clean.split(",") if t.strip()]
+        # Try to extract themes from response
+        theme_names = [t.strip() for t in response_clean.split(",") if t.strip()]
+
+        # Filter out common non-theme words that might appear in verbose responses
+        exclude_words = {"the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "a", "an", "is", "are", "was", "were"}
+        theme_names = [name for name in theme_names if name not in exclude_words and len(name) > 2]
+
+        # If we didn't get valid themes or got too many, use fallback
+        if len(theme_names) < 2 or len(theme_names) > 6 or not theme_names:
+            logger.debug("Theme extraction unclear, using keyword fallback")
+            theme_names = _fallback_theme_extraction(text)
 
         themes = [
             Theme(name=name, confidence=_theme_confidence(text, name))
@@ -327,37 +338,82 @@ async def _analyze_single_entry(entry: JournalEntry) -> JournalEntry:
 
 def _fallback_sentiment_detection(text: str) -> str:
     """Keyword-based sentiment detection as fallback.
-    
+
     Used when AI response is unclear or invalid.
-    
+
     Args:
         text: Journal entry text
-        
+
     Returns:
         Sentiment label based on keyword matching
     """
     text_lower = text.lower()
-    
+
     positive_keywords = [
         "happy", "great", "good", "wonderful", "excellent", "amazing",
         "fantastic", "excited", "joy", "love", "grateful", "thankful",
         "accomplished", "success", "proud", "breakthrough", "energized",
         "hopeful", "optimistic", "pleased", "satisfied", "delighted"
     ]
-    
+
     negative_keywords = [
         "sad", "terrible", "awful", "bad", "hate", "angry", "frustrated",
         "disappointed", "upset", "depressed", "anxious", "stressed", "worried",
         "failed", "failure", "wrong", "horrible", "miserable", "unhappy",
         "difficult", "hard", "struggle", "pain", "hurt"
     ]
-    
+
     pos_count = sum(1 for word in positive_keywords if word in text_lower)
     neg_count = sum(1 for word in negative_keywords if word in text_lower)
-    
+
     if pos_count > neg_count and pos_count > 0:
         return "positive"
     elif neg_count > pos_count and neg_count > 0:
         return "negative"
     else:
         return "neutral"
+
+
+def _fallback_theme_extraction(text: str) -> list[str]:
+    """Keyword-based theme extraction as fallback.
+
+    Used when AI response is unclear or invalid.
+
+    Args:
+        text: Journal entry text
+
+    Returns:
+        List of theme names based on keyword matching
+    """
+    text_lower = text.lower()
+
+    # Define theme categories with their keywords
+    theme_keywords = {
+        "work": ["work", "job", "career", "office", "project", "meeting", "deadline", "boss", "colleague"],
+        "family": ["family", "parent", "child", "spouse", "sibling", "home", "kids", "daughter", "son"],
+        "health": ["health", "exercise", "fitness", "doctor", "medical", "pain", "sick", "wellness"],
+        "stress": ["stress", "anxiety", "worried", "overwhelmed", "pressure", "tense", "nervous"],
+        "relationships": ["friend", "relationship", "social", "partner", "dating", "love", "connection"],
+        "personal": ["self", "myself", "personal", "growth", "development", "identity", "purpose"],
+        "creativity": ["creative", "art", "music", "writing", "design", "create", "expression"],
+        "finance": ["money", "finance", "budget", "savings", "income", "expense", "financial"],
+        "learning": ["learn", "study", "education", "course", "knowledge", "skill", "training"],
+        "leisure": ["hobby", "fun", "entertainment", "vacation", "relax", "enjoy", "leisure"],
+    }
+
+    # Count occurrences of keywords for each theme
+    theme_scores = {}
+    for theme, keywords in theme_keywords.items():
+        score = sum(1 for keyword in keywords if keyword in text_lower)
+        if score > 0:
+            theme_scores[theme] = score
+
+    # Get top 2-4 themes by score
+    sorted_themes = sorted(theme_scores.items(), key=lambda x: x[1], reverse=True)
+    theme_names = [theme for theme, score in sorted_themes[:4]]
+
+    # Ensure we have at least 2 themes
+    if len(theme_names) < 2:
+        theme_names = ["reflection", "thoughts"]
+
+    return theme_names
