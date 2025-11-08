@@ -152,7 +152,7 @@ Your response (comma-separated words only):"""
             response_clean = response_clean.split('.')[0]
 
         # Try to extract themes from response
-        theme_names = [t.strip() for t in response_clean.split(",") if t.strip()]
+        theme_names = [t.strip().strip('"\'') for t in response_clean.split(",") if t.strip()]
 
         # Filter out common non-theme words that might appear in verbose responses
         exclude_words = {"the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "a", "an", "is", "are", "was", "were"}
