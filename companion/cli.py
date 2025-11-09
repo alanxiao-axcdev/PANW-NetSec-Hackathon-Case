@@ -779,8 +779,12 @@ def rotate_keys_cmd() -> None:
     console.print("This will re-encrypt all journal entries with a new passphrase.")
     console.print("This limits exposure if your passphrase is compromised.\n")
 
-    # Get current passphrase
-    old_pass = Prompt.ask("Current passphrase", password=True)
+    # Get and verify current passphrase
+    try:
+        old_pass = get_passphrase("Current passphrase")
+    except (KeyboardInterrupt, ValueError) as e:
+        console.print(f"\n[red]{e if isinstance(e, ValueError) else 'Cancelled'}[/red]")
+        sys.exit(1)
 
     # Get new passphrase with strength checking
     while True:
