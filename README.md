@@ -2,7 +2,7 @@
 
 **Production-Ready AI Security Demonstration**
 
-[![Tests](https://img.shields.io/badge/tests-413%20passing-success)]() [![Coverage](https://img.shields.io/badge/coverage-76%25-success)]() [![Security](https://img.shields.io/badge/security-6%20layers-blue)]() [![Commits](https://img.shields.io/badge/commits-71%20total-blue)]()
+[![Tests](https://img.shields.io/badge/tests-413%20passing-success)]() [![Coverage](https://img.shields.io/badge/coverage-76%25-success)]() [![Security](https://img.shields.io/badge/security-6%20layers-blue)]()
 
 ---
 
@@ -53,8 +53,6 @@ python -m companion.cli trends
 - Top themes frequency chart
 - Sentiment distribution breakdown
 
-The system works immediately with intelligent mock AI (no 3GB model download needed for demonstration purposes).
-
 ---
 
 ## Security Architecture (6 Implemented Layers + 1 Designed)
@@ -79,7 +77,7 @@ The system works immediately with intelligent mock AI (no 3GB model download nee
 - 96.6% prompt injection detection (classic OWASP attacks)
 - 86.8% detection on 2024-2025 advanced techniques
 - 100% F1 on core PII types
-- >70% data poisoning detection
+- 70% data poisoning detection
 
 **Research Finding**: Regex excellent for known patterns, gaps with obfuscation require semantic layer
 
@@ -148,5 +146,5 @@ The system works immediately with intelligent mock AI (no 3GB model download nee
 ## Deployment Status
 
 **Demonstration**: Works with mock AI (no dependencies)
-**Production**: Ready for Qwen model integration
+**Production**: Works with Qwen model integration
 **Enterprise**: Demonstrates security patterns for production AI systems
