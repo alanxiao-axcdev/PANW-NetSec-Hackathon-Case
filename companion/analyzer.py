@@ -46,7 +46,13 @@ Respond with ONLY ONE WORD (no explanation, no punctuation):
 Your response (one word only):"""
 
     try:
-        response = await ai_engine.generate_text(prompt, max_tokens=10)
+        from companion.utils.retry import retry_with_backoff
+
+        # Retry Qwen up to 2 times if it fails (fast model, worth retrying)
+        async def generate_sentiment():
+            return await ai_engine.generate_text(prompt, max_tokens=10)
+
+        response = await retry_with_backoff(generate_sentiment, max_retries=2, base_delay=0.5)
         response_clean = response.strip().lower()
 
         # Extract sentiment word even if model adds extra text
@@ -138,7 +144,13 @@ List the themes as comma-separated single words (no explanations).
 Themes:"""
 
     try:
-        response = await ai_engine.generate_text(prompt, max_tokens=30)
+        from companion.utils.retry import retry_with_backoff
+
+        # Retry Qwen up to 2 times if it fails (fast model, worth retrying)
+        async def generate_themes():
+            return await ai_engine.generate_text(prompt, max_tokens=30)
+
+        response = await retry_with_backoff(generate_themes, max_retries=2, base_delay=0.5)
 
         # Clean response: extract only the comma-separated words
         # Remove any sentences or extra text
