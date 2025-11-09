@@ -191,6 +191,10 @@ async def _run_interactive_editor(
     warnings.filterwarnings('ignore', message='.*torch_dtype.*')
     warnings.filterwarnings('ignore', category=UserWarning, module='transformers.*')
 
+    # Clear screen to prevent scrollback leak
+    import os
+    os.system('clear' if os.name != 'nt' else 'cls')
+
     # Track session start for duration
     start_time = time.time()
 
@@ -215,22 +219,30 @@ async def _run_interactive_editor(
     )
 
     try:
-        # Run editor
+        # Run editor (screen cleared before/after to prevent scrollback)
         result = await session.prompt_async(default='')
 
         # Calculate duration
         duration = int(time.time() - start_time)
 
+        # Clear screen after editor to remove any traces
+        os.system('clear' if os.name != 'nt' else 'cls')
+
         return (result, duration)
 
     except KeyboardInterrupt:
-        # User cancelled
+        # User cancelled - clear screen
+        os.system('clear' if os.name != 'nt' else 'cls')
         return (None, 0)
     except EOFError:
         # Ctrl+D pressed (save)
         duration = int(time.time() - start_time)
         # Get the text that was entered
         result = session.default_buffer.text
+
+        # Clear screen
+        os.system('clear' if os.name != 'nt' else 'cls')
+
         return (result, duration)
 
 
