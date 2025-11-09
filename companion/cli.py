@@ -198,12 +198,17 @@ async def _run_interactive_editor(
     # Track session start for duration
     start_time = time.time()
 
-    # Get placeholder text
+    # Get AI-powered context-aware placeholder text
     placeholder = ""
-    if recent_entries and recent_entries[0].next_session_prompts:
-        placeholder = recent_entries[0].next_session_prompts[0]
-    else:
-        placeholder = "What's on your mind?"
+    try:
+        # Use AI to generate prompt based on recent entries and time of day
+        placeholder = await prompter.get_reflection_prompt(recent_entries, datetime.now())
+    except Exception:
+        # Fallback: Check for saved prompts from previous session
+        if recent_entries and recent_entries[0].next_session_prompts:
+            placeholder = recent_entries[0].next_session_prompts[0]
+        else:
+            placeholder = "What's on your mind?"
 
     # Placeholder styling - gray italic
     style = Style.from_dict({
