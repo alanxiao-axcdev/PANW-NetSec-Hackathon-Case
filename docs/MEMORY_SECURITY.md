@@ -1,6 +1,14 @@
 # Memory Security - Protecting Sensitive Data in RAM
 
-**Advanced Security Feature**: Memory protection against dump/swap attacks
+> **⚠️ STATUS: DESIGNED, NOT YET IMPLEMENTED**
+>
+> This document contains detailed design specifications for Layer 7 (Memory Security).
+> The architecture is complete and ready for implementation, but **the code has not been written yet**.
+>
+> **Current Status**: Design complete, implementation pending
+> **See**: ARCHITECTURE_AND_ROADMAP.md for implementation timeline
+
+**Advanced Security Feature**: Memory protection against dump/swap attacks (Layer 7 - Planned)
 
 ---
 

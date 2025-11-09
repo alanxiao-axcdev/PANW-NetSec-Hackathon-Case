@@ -1,9 +1,13 @@
 # Security Enhancement Roadmap
 
+> **📋 NOTE**: This document describes security enhancement opportunities and designs.
+> **Memory security features described here are DESIGNED but NOT YET IMPLEMENTED.**
+> See docs/MEMORY_SECURITY.md for detailed specifications.
+
 **Comprehensive security audit findings and enhancement plans for PANW1 Companion Application**
 
-Date: 2025-01-08  
-Auditor: Security Guardian Agent  
+Date: 2025-01-08
+Auditor: Security Guardian Agent
 Scope: Production-ready security for sensitive personal data (journaling use case)
 
 ---

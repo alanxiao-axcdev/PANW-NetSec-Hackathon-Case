@@ -69,9 +69,9 @@ Companion is architected as a **modular, security-first AI application** demonst
 
 ## Module Organization
 
-Companion consists of **28 modules** organized into **7 domains**:
+Companion consists of **38 modules** organized into **6 domains**:
 
-### Domain 1: Core (11 modules)
+### Domain 1: Core (13 modules)
 
 Foundation functionality for journaling application.
 
@@ -148,7 +148,23 @@ Foundation functionality for journaling application.
 
 ---
 
-### Domain 2: Security (4 modules)
+**Module: session.py**
+- **Purpose**: Session state management
+- **Exports**: `get_session()`, session passphrase caching
+- **Dependencies**: `models`
+- **Lines**: ~80
+
+**Module: passphrase_prompt.py**
+- **Purpose**: Passphrase prompting with verification
+- **Exports**: `get_passphrase()`, `setup_first_passphrase()`
+- **Dependencies**: `models`, `security/passphrase`, `session`
+- **Lines**: ~120
+
+**Total Core**: ~2,160 lines
+
+---
+
+### Domain 2: Security (6 modules)
 
 Security infrastructure for data protection.
 
@@ -180,7 +196,13 @@ Security infrastructure for data protection.
 - **Dependencies**: `spacy`, `models`
 - **Lines**: ~200
 
-**Total Security**: ~670 lines
+**Module: security/passphrase.py**
+- **Purpose**: Passphrase strength validation and hashing
+- **Exports**: `check_passphrase_strength()`, `hash_passphrase()`, `verify_passphrase_hash()`
+- **Dependencies**: `models`, `cryptography`
+- **Lines**: ~150
+
+**Total Security**: ~820 lines
 
 ---
 
@@ -202,13 +224,6 @@ Production observability and health checks.
 - **Dependencies**: `models`, `ai_engine`
 - **Lines**: ~130
 
-**Module: monitoring/telemetry.py**
-- **Purpose**: Usage analytics (local only)
-- **Exports**: `record_event()`, `get_usage_stats()`, `export_telemetry()`
-- **Privacy**: No external reporting, all local
-- **Dependencies**: `models`
-- **Lines**: ~100
-
 **Module: monitoring/dashboard.py**
 - **Purpose**: Terminal metrics display
 - **Exports**: `display_metrics()`, `display_health()`, `live_monitor()`
@@ -216,47 +231,11 @@ Production observability and health checks.
 - **Dependencies**: `metrics`, `health`, `Rich`
 - **Lines**: ~180
 
-**Total Monitoring**: ~570 lines
+**Total Monitoring**: ~470 lines
 
 ---
 
-### Domain 4: Inference Optimization (4 modules)
-
-Performance optimization for AI inference.
-
-**Module: inference/optimizer.py**
-- **Purpose**: Model quantization
-- **Exports**: `quantize_model()`, `compare_performance()`, `get_stats()`
-- **Method**: INT8 dynamic quantization
-- **Dependencies**: `optimum`, `torch`
-- **Lines**: ~190
-
-**Module: inference/batcher.py**
-- **Purpose**: Batch inference
-- **Exports**: `add_to_batch()`, `process_batch()`, `auto_batch()`
-- **Strategy**: Dynamic batching with timeout
-- **Dependencies**: `asyncio`, `ai_engine`
-- **Lines**: ~140
-
-**Module: inference/cache.py**
-- **Purpose**: Semantic prompt caching
-- **Exports**: `cache_response()`, `get_cached()`, `similarity_search()`
-- **Method**: Embedding-based similarity (threshold 0.85)
-- **Dependencies**: `sentence-transformers`
-- **Lines**: ~170
-
-**Module: inference/benchmark.py**
-- **Purpose**: Performance benchmarking
-- **Exports**: `run_inference_benchmark()`, `run_cache_benchmark()`, `generate_report()`
-- **Metrics**: Latency, throughput, memory, accuracy
-- **Dependencies**: `models`, all inference modules
-- **Lines**: ~220
-
-**Total Inference**: ~720 lines
-
----
-
-### Domain 5: Security Research (4 modules)
+### Domain 4: Security Research (5 modules)
 
 Novel AI security techniques.
 
@@ -295,7 +274,7 @@ Novel AI security techniques.
 
 ---
 
-### Domain 6: AI Backend (5 modules)
+### Domain 5: AI Backend (6 modules)
 
 Pluggable AI provider architecture.
 
@@ -337,7 +316,7 @@ Pluggable AI provider architecture.
 
 ---
 
-### Domain 7: Utils (3 modules)
+### Domain 6: Utils (4 modules)
 
 Shared utilities for reliability.
 
@@ -367,16 +346,15 @@ Shared utilities for reliability.
 
 | Domain | Modules | Total Lines | Purpose |
 |--------|---------|-------------|---------|
-| Core | 10 | ~1,940 | Foundation functionality |
-| Security | 4 | ~670 | Data protection |
-| Monitoring | 4 | ~570 | Observability |
-| Inference | 4 | ~720 | Performance optimization |
-| Security Research | 4 | ~1,200 | Novel security techniques |
-| AI Backend | 5 | ~640 | Pluggable AI providers |
-| Utils | 3 | ~250 | Shared utilities |
-| **Total** | **34** | **~5,990** | **Complete system** |
+| Core | 13 | ~2,160 | Foundation functionality |
+| Security | 6 | ~820 | Data protection |
+| Monitoring | 4 | ~470 | Observability |
+| Security Research | 5 | ~1,200 | Novel security techniques |
+| AI Backend | 6 | ~640 | Pluggable AI providers |
+| Utils | 4 | ~250 | Shared utilities |
+| **Total** | **38** | **~5,540** | **Complete system** |
 
-*Note: Line counts are estimates for planning. Actual implementation may vary.*
+*Note: Line counts are estimates. Actual implementation may vary.*
 
 ---
 

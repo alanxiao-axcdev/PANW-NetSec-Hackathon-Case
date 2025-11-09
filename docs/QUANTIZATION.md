@@ -1,6 +1,14 @@
 # Model Quantization - Production Optimization
 
-**Performance Feature**: INT8 quantization for efficient edge deployment
+> **⚠️ STATUS: DESIGNED, NOT YET IMPLEMENTED**
+>
+> This document contains detailed design specifications for model quantization.
+> The architecture is complete and ready for implementation, but **the code has not been written yet**.
+>
+> **Current Status**: Design complete, implementation pending
+> **See**: ARCHITECTURE_AND_ROADMAP.md for details
+
+**Performance Feature**: INT8 quantization for efficient edge deployment (Designed)
 
 ---
 

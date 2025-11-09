@@ -113,7 +113,7 @@ This demonstrates security engineering principles applicable to any AI system ha
 
 ## Complete Architecture
 
-**30 modules** (added audit encryption):
+**38 modules** (added audit encryption, passphrase.py, session.py, trends.py, passphrase_prompt.py):
 
 **Security Domain (5 modules):**
 - encryption.py + key rotation
