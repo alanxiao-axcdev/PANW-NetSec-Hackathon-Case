@@ -14,7 +14,6 @@ from datetime import date, datetime, timedelta
 import click
 from prompt_toolkit import PromptSession
 from prompt_toolkit.formatted_text import FormattedText
-from prompt_toolkit.key_binding import KeyBindings
 from prompt_toolkit.styles import Style
 from rich.console import Console
 from rich.panel import Panel
@@ -176,27 +175,12 @@ async def _run_interactive_editor(
         'placeholder': 'italic #888888',
     })
 
-    # Key bindings
-    kb = KeyBindings()
-
-    @kb.add('c-d')  # Ctrl+D to save
-    def save(event) -> None:
-        """Save entry and exit."""
-        event.app.exit()
-
-    @kb.add('c-c')  # Ctrl+C to cancel
-    def cancel(event) -> None:
-        """Cancel without saving."""
-        event.app.exit()
-        raise KeyboardInterrupt()
-
-    # Create session with placeholder support
+    # Create session with placeholder support (uses default keybindings)
     session = PromptSession(
         multiline=True,
         placeholder=FormattedText([('class:placeholder', placeholder)]),
         style=style,
-        key_bindings=kb,
-        bottom_toolbar=' Ctrl+D: Save  |  Ctrl+C: Cancel',
+        bottom_toolbar=' Meta+Enter or Esc+Enter: Save  |  Ctrl+C: Cancel',
     )
 
     try:
