@@ -20,9 +20,9 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 
 from companion import analyzer, config, journal, prompter, summarizer
-from companion.passphrase_prompt import get_passphrase
 from companion.models import JournalEntry
 from companion.monitoring import dashboard, health
+from companion.passphrase_prompt import get_passphrase
 from companion.security.audit import decrypt_audit_log, log_security_event, verify_audit_log_integrity
 from companion.security.passphrase import (
     PassphraseStrength,
@@ -222,7 +222,7 @@ def write() -> None:
             from companion.session import get_session
             session = get_session()
             passphrase_temp = session.get_passphrase()
-        
+
         recent_entries = journal.get_recent_entries(limit=5, passphrase=passphrase_temp)
     except Exception:
         # If can't load recent, just use empty list
@@ -253,9 +253,60 @@ def write() -> None:
         console.print("\n[yellow]Empty entry not saved.[/yellow]")
         return
 
+    content = content.strip()
+
+    # PII Detection - warn user if detected
+    try:
+        from companion.security.pii_detector import detect_pii
+
+        pii_matches = detect_pii(content)
+        if pii_matches and len(pii_matches) > 0:
+            console.print("\n[yellow]⚠️  Possible PII detected:[/yellow]")
+            for match in pii_matches[:3]:  # Show first 3
+                console.print(f"  • {match.pii_type}: confidence {match.confidence:.0%}")
+
+            console.print("\n[dim]Your journal is encrypted, but consider:")
+            console.print("  [1] Save as-is (recommended - your data is encrypted)")
+            console.print("  [2] Cancel and edit[/dim]\n")
+
+            choice = Prompt.ask("Choice", choices=["1", "2"], default="1")
+            if choice == "2":
+                console.print("[yellow]Entry cancelled. Run 'companion write' to try again.[/yellow]")
+                return
+
+            # Log PII detection
+            log_security_event(
+                "pii_detected",
+                {"entry_id": "pending", "pii_count": len(pii_matches)},
+                severity="warning"
+            )
+    except Exception as e:
+        logger.debug("PII detection failed: %s", e)
+        # Continue anyway - PII detection is non-critical
+
+    # Prompt Injection Detection - warn if suspicious patterns
+    try:
+        from companion.security_research.prompt_injection_detector import detect_injection
+
+        risk = detect_injection(content)
+        if risk.level in ["HIGH", "MEDIUM"]:
+            console.print(f"\n[yellow]⚠️  Security Notice: {risk.type}[/yellow]")
+            console.print(f"[dim]Risk level: {risk.level}[/dim]")
+            console.print("[dim]This entry contains patterns similar to prompt injection.[/dim]")
+            console.print("[dim]Since this is your personal journal, this is likely fine.[/dim]\n")
+
+            # Log detection
+            log_security_event(
+                "prompt_injection_detected",
+                {"risk_level": risk.level, "type": risk.type},
+                severity="warning"
+            )
+    except Exception as e:
+        logger.debug("Prompt injection detection failed: %s", e)
+
     # Create entry with duration
     entry = JournalEntry(
-        content=content.strip(),
+        content=content,
         duration_seconds=duration
     )
 
@@ -352,7 +403,7 @@ def list_entries(limit: int, date: str | None) -> None:
             except KeyboardInterrupt:
                 console.print("\n[yellow]Cancelled.[/yellow]")
                 return
-        
+
         if date:
             # Parse date and get entries for that day
             target_date = datetime.strptime(date, "%Y-%m-%d").date()
@@ -405,7 +456,7 @@ def show(entry_id: str) -> None:
             except KeyboardInterrupt:
                 console.print("\n[yellow]Cancelled.[/yellow]")
                 return
-        
+
         entry = journal.get_entry(entry_id, passphrase=passphrase)
 
         # Format timestamp
@@ -455,7 +506,7 @@ def summary(period: str) -> None:
 
         # Get entries
         console.print(f"\n[cyan]Loading {period} entries...[/cyan]")
-        
+
         # Get passphrase if encryption enabled
         cfg_obj = config.load_config()
         passphrase = None
@@ -465,7 +516,7 @@ def summary(period: str) -> None:
             except KeyboardInterrupt:
                 console.print("\n[yellow]Cancelled.[/yellow]")
                 return
-        
+
         entries = journal.get_entries_by_date_range(start_date, end_date, passphrase=passphrase)
 
         if not entries:
