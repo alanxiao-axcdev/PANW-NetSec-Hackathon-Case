@@ -49,10 +49,10 @@ encrypted = AES256_GCM.encrypt(json.dumps(entry_data), key)
 ```
 
 **Key management**:
-- Passphrase provided once per session
-- Cached in memory (never written to disk)
+- Passphrase requested at session start (before any operations)
+- Cached in memory for the session (never written to disk)
 - Cleared on process exit
-- Optional OS keyring integration
+- Enables context loading from previous encrypted entries
 
 **Threat mitigation**:
 -  Protects against: Disk theft, unauthorized access, forensic recovery

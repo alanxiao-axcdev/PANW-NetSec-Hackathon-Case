@@ -1,0 +1,7 @@
+# DDD Phase 2: Non-Code Files Index
+
+Based on ai_working/ddd/plan.md, these files need updating:
+
+[ ] README.md - Update "How it works" to reflect passphrase-first flow
+[ ] docs/SECURITY.md - Document authentication timing and security model
+[ ] docs/USER_GUIDE.md - Update usage flow if it describes write command

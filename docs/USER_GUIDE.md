@@ -65,48 +65,50 @@ See [DEVELOPMENT.md](DEVELOPMENT.md) for details.
 
 ## First Run Experience
 
-The first time you run Companion, it will:
-1. Download the AI model (~3GB one-time download)
-2. Create your journal directory
-3. Set up encryption
-4. Welcome you with a warm greeting
+The first time you run Companion, the setup flow authenticates you first, then opens the editor:
 
-**Let's get started**:
+**Setup flow**:
+1. Welcome and directory creation
+2. Passphrase setup (before first write)
+3. AI model loading (if needed)
+4. Context-aware editor opens
+
+**Example first run**:
 
 ```bash
 $ companion
 
 Welcome to Companion! 👋
 
-I'm your private journaling companion. Let's get you set up.
+Creating your journal space at ~/.companion/
 
-This will take about 30 seconds:
+🔒 Passphrase Setup
+Create a strong passphrase to encrypt your journal entries:
+  • Minimum 12 characters (16+ recommended)
+  • Use varied characters (letters, numbers, symbols)
+  • Make it memorable (e.g., 'my-secure-journal-2025!')
 
-1. Downloading AI model (Qwen2.5-1.5B, ~820MB)...
-   [████████████████████] 100% - 3.2s
+⚠️  Important: There is NO password recovery.
+   If you forget this passphrase, your entries are LOST.
 
-2. Creating your journal space at ~/.companion/
+Create passphrase: ****************
+Confirm passphrase: ****************
 
-🔒 Create a passphrase to encrypt your journal:
-   (Minimum 8 characters)
+✓ Strong passphrase (score: 85/100)
+  Entropy: 67.2 bits
 
-Passphrase: ********
-Confirm: ********
-
- All set! Your journal is completely private and stays on this device.
-
-Ready to start? (Press Enter)
+✓ Passphrase configured successfully!
 
 ───────────────────────────────────────────────
 
-Good evening! 
+Good evening! 🌙
 
 What's on your mind today?
 
 → _
 ```
 
-**That's it!** You're ready to journal.
+**That's it!** Your passphrase is set up and you're ready to journal.
 
 ---
 
@@ -121,45 +123,46 @@ $ companion
 ```
 
 Companion will:
+- Request your passphrase (cached per session)
 - Greet you based on time of day
-- Give you a thoughtful prompt (if you pause for 15 seconds)
+- Load context from previous entries
+- Show you an AI-generated prompt based on your recent themes
 - Let you write freely
-- Analyze your entry when you're done
+- Analyze your entry and generate prompts for next time
 
 ### The Interactive Editor
 
-**Companion uses a professional terminal editor** with intelligent prompts that appear when you need them.
+**Companion uses a professional terminal editor** with intelligent, context-aware prompts.
 
 **How it works**:
 
-1. **Blank slate start** - No prompt shown initially, just an empty text area
-2. **Idle detection** - After 15 seconds of no typing, contextual AI prompts appear
-3. **Subtle placeholders** - Prompts show as *gray, italicized* text that disappears when you type
-4. **Context-aware** - Prompts reference your recent entries and current writing
-5. **Configurable timing** - Adjust idle threshold in config (default: 15 seconds)
+1. **Authenticate first** - Passphrase requested at session start (enables context loading)
+2. **Context-aware placeholder** - AI-generated prompt based on your recent entry themes shows as gray italic text
+3. **Intelligent prompts** - References patterns from your writing history
+4. **Idle detection** - Additional prompts appear if you pause 15+ seconds while writing
+5. **Session caching** - Passphrase requested once per session, not per entry
 
 **Keyboard Shortcuts**:
-- **Ctrl+D** - Save entry and exit
+- **Ctrl+D** or **Meta+Enter** - Save entry and exit
 - **Ctrl+C** - Cancel without saving
 
-**Example session**:
+**Example returning user session**:
 
 ```bash
-$ companion write
+$ companion
+
+Enter passphrase: ****************
+✓ Welcome back!
 
 Good evening! 🌙
 
-_
+How are you managing the work stress from your recent entries?
 
-[You pause for 15 seconds...]
+[Gray italicized AI-generated prompt referencing previous themes]
 
-Yesterday you mentioned work stress. How did today go?
+→ _
 
-[Gray italicized placeholder appears above. You start typing "A"...]
-
-A_
-
-[Placeholder disappears immediately, you continue writing...]
+[You start typing - placeholder disappears...]
 
 Actually had a breakthrough today. The solution was simpler than I thought...
 
@@ -167,13 +170,17 @@ Actually had a breakthrough today. The solution was simpler than I thought...
 
 ✓ Entry saved (3 min)
 
-Sentiment: Stressed → Relief → Positive
+Analyzing...
+Sentiment: Neutral → Positive
 Themes: Work, Problem-solving, Breakthrough
 
-Great insight about perspective! See you tomorrow. 💚
+See you next time! 💚
 ```
 
-**Duration Tracking**: Your writing time is automatically recorded for personal insights.
+**Key Features**:
+- **Context continuity**: Each session's prompt references your previous writing
+- **Duration tracking**: Writing time recorded for insights
+- **Session-scoped auth**: Passphrase requested once, cached for the session
 
 ### Saving Your Entry
 

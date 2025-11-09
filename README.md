@@ -38,11 +38,12 @@ python -m pytest -v | tail -5
 ```
 
 **Interactive Writing Experience:**
-- Start with a blank slate (no upfront prompts)
-- Contextual AI prompts appear as subtle gray text
+- Authenticate at session start (passphrase requested first)
+- Context-aware prompts from previous entries show as subtle gray placeholder text
+- AI analyzes your writing patterns and suggests relevant reflection questions
 - Meta+Enter or Esc+Enter to save your entry
-- Ctrl+C to cancel
-- Natural terminal editor UX
+- Ctrl+C to cancel at any time
+- Natural terminal editor UX with intelligent guidance
 
 **Visualize Your Patterns:**
 ```bash
