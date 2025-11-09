@@ -50,11 +50,8 @@ def mock_summarizer():
         yield mock
 
 
-@pytest.fixture
-def mock_health():
-    """Mock health checks."""
-    with patch("companion.cli.health") as mock:
-        yield mock
+# Removed mock_health fixture - now using inline patches in tests to avoid
+# name collision with the renamed 'health' command
 
 
 @pytest.fixture
@@ -276,45 +273,91 @@ class TestSummaryCommand:
 class TestHealthCommand:
     """Tests for health command."""
 
-    def test_health_check_all_ok(self, runner, mock_config, mock_health):
+    def test_health_check_all_ok(self, runner, mock_config):
         """Test health check when all systems OK."""
-        mock_health.check_model_loaded.return_value = HealthStatus(
-            component="ai_model", status="OK", message="Model loaded"
-        )
-        mock_health.check_storage_accessible.return_value = HealthStatus(
-            component="storage", status="OK", message="Storage accessible"
-        )
-        mock_health.check_disk_space.return_value = HealthStatus(
-            component="disk_space", status="OK", message="Sufficient space"
-        )
-        mock_health.check_memory_available.return_value = HealthStatus(
-            component="memory", status="OK", message="Memory available"
-        )
+        with patch("companion.monitoring.health.check_model_loaded") as mock_model, \
+             patch("companion.monitoring.health.check_storage_accessible") as mock_storage, \
+             patch("companion.monitoring.health.check_disk_space") as mock_disk, \
+             patch("companion.monitoring.health.check_memory_available") as mock_memory:
 
-        result = runner.invoke(cli.health_check)
+            mock_model.return_value = HealthStatus(
+                component="ai_model", status="OK", message="Model loaded"
+            )
+            mock_storage.return_value = HealthStatus(
+                component="storage", status="OK", message="Storage accessible"
+            )
+            mock_disk.return_value = HealthStatus(
+                component="disk_space", status="OK", message="Sufficient space"
+            )
+            mock_memory.return_value = HealthStatus(
+                component="memory", status="OK", message="Memory available"
+            )
 
-        assert result.exit_code == 0
-        assert "HEALTHY" in result.output or "OK" in result.output
+            result = runner.invoke(cli.health)
 
-    def test_health_check_degraded(self, runner, mock_config, mock_health):
+            assert result.exit_code == 0
+            assert "HEALTHY" in result.output or "OK" in result.output
+
+    def test_health_check_degraded(self, runner, mock_config):
         """Test health check when system degraded."""
-        mock_health.check_model_loaded.return_value = HealthStatus(
-            component="ai_model", status="DEGRADED", message="Model slow"
-        )
-        mock_health.check_storage_accessible.return_value = HealthStatus(
-            component="storage", status="OK", message="Storage accessible"
-        )
-        mock_health.check_disk_space.return_value = HealthStatus(
-            component="disk_space", status="OK", message="Sufficient space"
-        )
-        mock_health.check_memory_available.return_value = HealthStatus(
-            component="memory", status="OK", message="Memory available"
-        )
+        with patch("companion.monitoring.health.check_model_loaded") as mock_model, \
+             patch("companion.monitoring.health.check_storage_accessible") as mock_storage, \
+             patch("companion.monitoring.health.check_disk_space") as mock_disk, \
+             patch("companion.monitoring.health.check_memory_available") as mock_memory:
 
-        result = runner.invoke(cli.health_check)
+            mock_model.return_value = HealthStatus(
+                component="ai_model", status="DEGRADED", message="Model slow"
+            )
+            mock_storage.return_value = HealthStatus(
+                component="storage", status="OK", message="Storage accessible"
+            )
+            mock_disk.return_value = HealthStatus(
+                component="disk_space", status="OK", message="Sufficient space"
+            )
+            mock_memory.return_value = HealthStatus(
+                component="memory", status="OK", message="Memory available"
+            )
 
-        assert result.exit_code == 0
-        assert "DEGRADED" in result.output or "⚠" in result.output
+            result = runner.invoke(cli.health)
+
+            assert result.exit_code == 0
+            assert "DEGRADED" in result.output or "⚠" in result.output
+
+    def test_health_command_with_ai_flag(self, runner, mock_config):
+        """Test health --ai shows AI provider diagnostics."""
+        result = runner.invoke(cli.health, ['--ai'])
+
+        assert result.exit_code in [0, 1]  # May be 1 if provider not initialized
+        assert "AI Provider Health Check" in result.output
+        assert "Provider:" in result.output
+        assert "Status:" in result.output
+
+    def test_health_command_without_ai_flag(self, runner, mock_config):
+        """Test health without flag shows system health."""
+        with patch("companion.monitoring.health.check_model_loaded") as mock_model, \
+             patch("companion.monitoring.health.check_storage_accessible") as mock_storage, \
+             patch("companion.monitoring.health.check_disk_space") as mock_disk, \
+             patch("companion.monitoring.health.check_memory_available") as mock_memory:
+
+            mock_model.return_value = HealthStatus(
+                component="ai_model", status="OK", message="OK"
+            )
+            mock_storage.return_value = HealthStatus(
+                component="storage", status="OK", message="OK"
+            )
+            mock_disk.return_value = HealthStatus(
+                component="disk_space", status="OK", message="OK"
+            )
+            mock_memory.return_value = HealthStatus(
+                component="memory", status="OK", message="OK"
+            )
+
+            result = runner.invoke(cli.health)
+
+            assert result.exit_code == 0
+            assert "Companion Health Check" in result.output
+            # Should NOT show AI-specific detailed output
+            assert "AI Provider Health Check" not in result.output
 
 
 class TestMetricsCommand:

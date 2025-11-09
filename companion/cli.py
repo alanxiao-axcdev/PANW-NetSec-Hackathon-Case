@@ -21,7 +21,8 @@ from rich.prompt import Prompt
 
 from companion import analyzer, config, journal, prompter, summarizer
 from companion.models import JournalEntry
-from companion.monitoring import dashboard, health
+from companion.monitoring import dashboard
+from companion.monitoring import health as health_module
 from companion.passphrase_prompt import get_passphrase
 from companion.security.audit import (
     decrypt_audit_log,
@@ -683,13 +684,19 @@ def trends(period: str, start: str | None, end: str | None) -> None:
     show_trends(period=period, start_date=start_date, end_date=end_date)
 
 
-@main.command()
-def health_check() -> None:
+@main.command("health")
+@click.option('--ai', is_flag=True, help='Show detailed AI provider diagnostics')
+def health(ai: bool) -> None:
     """Show system health status.
 
-    Displays health checks for AI model, storage, and system resources.
+    Use --ai flag for detailed AI provider diagnostics.
     """
     try:
+        if ai:
+            _show_ai_health()
+            return
+
+        # Original system health check
         console.print("\n[bold cyan]Companion Health Check[/bold cyan]")
         console.print("─" * 60, style="dim")
         console.print()
@@ -699,10 +706,10 @@ def health_check() -> None:
         data_dir = cfg.data_directory
 
         checks = [
-            health.check_model_loaded(),
-            health.check_storage_accessible(data_dir),
-            health.check_disk_space(data_dir),
-            health.check_memory_available(),
+            health_module.check_model_loaded(),
+            health_module.check_storage_accessible(data_dir),
+            health_module.check_disk_space(data_dir),
+            health_module.check_memory_available(),
         ]
 
         # Display results
@@ -733,6 +740,58 @@ def health_check() -> None:
     except Exception as e:
         logger.error("Health check failed: %s", e)
         console.print(f"\n[red]Error running health check: {e}[/red]\n")
+
+
+def _show_ai_health() -> None:
+    """Show detailed AI provider health diagnostics."""
+    from companion import ai_engine
+
+    console.print("\n[bold cyan]AI Provider Health Check[/bold cyan]")
+    console.print("=" * 60)
+    console.print()
+
+    health_info = ai_engine.get_provider_health()
+
+    # Provider name
+    console.print(f"Provider: [bold]{health_info['provider_name']}[/bold]")
+
+    # Initialization status
+    if health_info['initialized']:
+        console.print(f"Status: [green]✓ Initialized[/green]")
+    else:
+        console.print(f"Status: [red]✗ Not Initialized[/red]")
+
+    # Model loaded
+    if health_info['model_loaded']:
+        # Determine which model from config
+        cfg = config.load_config()
+        console.print(f"Model: [green]{cfg.model_name} loaded[/green]")
+    else:
+        console.print(f"Model: [red]Not loaded[/red]")
+
+    # Device (if Qwen)
+    if health_info['provider_name'] == "QwenProvider" and ai_engine._provider:
+        device = getattr(ai_engine._provider, 'device', 'unknown')
+        console.print(f"Device: {device}")
+
+    # Performance
+    if health_info['last_inference_time_ms']:
+        console.print(f"Last Inference: {health_info['last_inference_time_ms']:.0f}ms")
+
+    # Errors
+    if health_info['error']:
+        console.print(f"Error Count: [yellow]{health_info['error']}[/yellow]")
+    else:
+        console.print(f"Error Count: [green]0[/green]")
+
+    console.print()
+
+    # Overall status
+    if health_info['initialized'] and health_info['model_loaded']:
+        console.print("[bold green]All systems operational.[/bold green]\n")
+    else:
+        console.print("[bold red]AI provider not functioning.[/bold red]")
+        console.print("[dim]See docs/TROUBLESHOOTING.md for solutions.[/dim]\n")
         sys.exit(1)
 
 
