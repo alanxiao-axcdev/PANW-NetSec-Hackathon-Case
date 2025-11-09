@@ -24,6 +24,7 @@ def mock_config():
         mock_cfg.first_run_complete = True
         mock_cfg.data_directory = MagicMock()
         mock_cfg.editor_idle_threshold = 15  # Default value
+        mock_cfg.enable_encryption = False  # Disable encryption in tests
         mock.load_config.return_value = mock_cfg
         yield mock
 
@@ -182,7 +183,7 @@ class TestListCommand:
         result = runner.invoke(cli.list_entries, ["--limit", "5"])
 
         assert result.exit_code == 0
-        mock_journal.get_recent_entries.assert_called_with(limit=5)
+        mock_journal.get_recent_entries.assert_called_with(limit=5, passphrase=None)
 
     def test_list_entries_by_date(self, runner, mock_config, mock_journal):
         """Test listing entries for specific date."""
@@ -226,7 +227,7 @@ class TestShowCommand:
         result = runner.invoke(cli.show, ["test-entry-123"])
 
         assert result.exit_code == 0
-        mock_journal.get_entry.assert_called_with("test-entry-123")
+        mock_journal.get_entry.assert_called_with("test-entry-123", passphrase=None)
         assert "journal entry content" in result.output.lower() or "entry" in result.output.lower()
 
     def test_show_entry_not_found(self, runner, mock_config, mock_journal):
