@@ -23,46 +23,46 @@ Companion is architected as a **modular, security-first AI application** demonst
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      User Interface (CLI)                    │
-│                    Click + Rich + prompt_toolkit             │
+│                      User Interface (CLI)                   │
+│                    Click + Rich + prompt_toolkit            │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────┴──────────────────────────────────────┐
-│                     Security Layer                           │
+│                     Security Layer                          │
 │        Encryption │ Sandboxing │ Audit │ PII Detection      │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────┴──────────────────────────────────────┐
-│                      Core Services                           │
+│                      Core Services                          │
 │     Journal │ Analyzer │ Prompter │ Summarizer │ Config     │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────┴──────────────────────────────────────┐
-│                   AI Backend (Pluggable)                     │
+│                   AI Backend (Pluggable)                    │
 │      Qwen │ Ollama │ OpenAI │ Mock (for testing)            │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────┴──────────────────────────────────────┐
-│                  Inference Optimization                      │
+│                  Inference Optimization                     │
 │       Quantization │ Batching │ Caching │ Benchmarking      │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────┴──────────────────────────────────────┐
-│                    Monitoring Layer                          │
-│         Metrics │ Health Checks │ Telemetry │ Dashboard      │
+│                    Monitoring Layer                         │
+│         Metrics │ Health Checks │ Telemetry │ Dashboard     │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────┴──────────────────────────────────────┐
-│                   Security Research                          │
+│                   Security Research                         │
 │    Prompt Injection │ PII Sanitizer │ Data Poisoning │      │
-│                  Adversarial Testing                         │
+│                  Adversarial Testing                        │
 └──────────────────────┬──────────────────────────────────────┘
                        │
 ┌──────────────────────┴──────────────────────────────────────┐
-│                    Storage Layer                             │
-│              JSON Files (Encrypted at Rest)                  │
-│        ~/.companion/{entries, config, audit, cache}          │
-└──────────────────────────────────────────────────────────────┘
+│                    Storage Layer                            │
+│              JSON Files (Encrypted at Rest)                 │
+│        ~/.companion/{entries, config, audit, cache}         │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---
