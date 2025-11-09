@@ -144,6 +144,36 @@ python -m companion.cli trends
 
 ---
 
+## AI Backend
+
+**Qwen 2.5-1.5B (Default)**:
+- Local inference (no API costs)
+- Runs on CPU or GPU (CUDA auto-detected)
+- First run downloads model (~3GB, cached)
+- Requirements: `torch>=2.0.0`, `transformers>=4.35.0`
+- Diagnostics: `companion health --ai`
+
+**System Requirements**:
+- 8GB+ RAM for Qwen
+- 3-5GB disk space for model cache
+- GPU optional (CPU mode works, ~2-5s per analysis)
+
+**Installation**:
+```bash
+# Install with AI dependencies
+make install
+
+# Or manually add dependencies
+uv add torch transformers
+
+# Verify AI provider
+companion health --ai
+```
+
+**Troubleshooting**: See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for common issues.
+
+---
+
 ## Deployment Status
 
 **Demonstration**: Works with mock AI (no dependencies)

@@ -552,6 +552,77 @@ make docs             # Build documentation (if applicable)
 
 ---
 
+## Diagnostic Commands
+
+### Health Check
+
+Check the status of AI provider and system components:
+
+```bash
+# Check AI provider health
+companion health --ai
+```
+
+**Output includes**:
+- Provider name (QwenProvider, MockProvider, etc.)
+- Initialization status
+- Model loading status
+- Last inference time (ms)
+- Recent error count
+- Specific error messages with solutions
+
+**Example output** (healthy system):
+```
+AI Provider Health Check
+========================
+
+Provider: QwenProvider
+Status: ✓ Initialized
+Model: Qwen/Qwen2.5-1.5B loaded
+Device: cuda
+Last Inference: 245ms
+Error Count: 0
+
+All systems operational.
+```
+
+**Example output** (problem detected):
+```
+AI Provider Health Check
+========================
+
+Provider: QwenProvider
+Status: ✗ Failed to initialize
+Error: CUDA out of memory
+
+Recommended Actions:
+- Close other applications to free RAM
+- Model will automatically use CPU mode
+- Expected inference time: 2-5s (CPU) vs <1s (GPU)
+
+See docs/TROUBLESHOOTING.md for detailed solutions.
+```
+
+**Use cases**:
+- Verify Qwen initialization after installation
+- Diagnose slow sentiment analysis
+- Check which provider is active (Qwen vs Mock)
+- Debug AI-related issues before filing bug reports
+
+**Integration in workflows**:
+```bash
+# Verify after fresh install
+make install
+source .venv/bin/activate
+companion health --ai
+
+# Debug failing tests
+pytest tests/test_analyzer.py -v  # Fails
+companion health --ai  # Check if AI provider issue
+```
+
+---
+
 ## Code Style Guidelines
 
 ### General Principles
