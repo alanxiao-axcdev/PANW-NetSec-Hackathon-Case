@@ -157,10 +157,20 @@ Themes:"""
         exclude_words = {"the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "a", "an", "is", "are", "was", "were"}
         theme_names = [name for name in theme_names if name not in exclude_words and len(name) > 2]
 
-        # If we didn't get valid themes or got too many, use fallback
-        if len(theme_names) < 2 or len(theme_names) > 6 or not theme_names:
-            logger.debug("Theme extraction unclear, using keyword fallback")
+        # If we didn't get any valid themes or got too many, use fallback
+        # Relaxed: accept 1-6 themes instead of requiring 2-6
+        if len(theme_names) > 6 or not theme_names:
+            logger.debug("Theme extraction unclear (got %d themes), using keyword fallback", len(theme_names))
             theme_names = _fallback_theme_extraction(text)
+        elif len(theme_names) == 1:
+            # Only 1 theme from AI - supplement with keyword detection
+            logger.debug("Only 1 theme from AI, supplementing with keywords")
+            keyword_themes = _fallback_theme_extraction(text)
+            # Add first keyword theme that's different from AI theme
+            for kt in keyword_themes:
+                if kt not in theme_names:
+                    theme_names.append(kt)
+                    break
 
         themes = [
             Theme(name=name, confidence=_theme_confidence(text, name))
