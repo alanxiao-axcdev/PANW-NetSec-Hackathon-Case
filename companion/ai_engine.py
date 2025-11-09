@@ -55,13 +55,15 @@ async def initialize_model() -> None:
 def _get_provider(config: "Config") -> AIProvider:
     """Get AI provider based on configuration.
 
-    Defaults to Qwen for production use, with graceful fallback to mock.
-
     Args:
         config: Application configuration
 
     Returns:
         Configured AI provider instance
+
+    Raises:
+        ValueError: If provider name is not recognized
+        RuntimeError: If provider initialization fails
     """
     from companion.ai_backend.qwen_provider import QwenProvider
     from companion.ai_backend.ollama_provider import OllamaProvider
@@ -70,30 +72,21 @@ def _get_provider(config: "Config") -> AIProvider:
     provider_name = getattr(config, "ai_provider", "qwen")
 
     if provider_name == "qwen":
-        try:
-            logger.info("Using Qwen AI provider (real model)")
-            return QwenProvider(model_name=config.model_name)
-        except Exception as e:
-            logger.warning("Qwen provider failed to initialize: %s, falling back to mock", e)
-            logger.info("Using mock provider for demo (install transformers+torch for real AI)")
-            return MockProvider()
+        logger.info("Initializing Qwen AI provider")
+        # Let initialization errors propagate - no silent fallback
+        return QwenProvider(model_name=config.model_name)
     elif provider_name == "ollama":
-        try:
-            logger.info("Using Ollama AI provider")
-            return OllamaProvider()
-        except Exception as e:
-            logger.warning("Ollama provider failed: %s, using mock", e)
-            return MockProvider()
+        logger.info("Initializing Ollama AI provider")
+        # Let initialization errors propagate - no silent fallback
+        return OllamaProvider()
     elif provider_name == "mock":
         logger.info("Using mock AI provider (testing mode)")
         return MockProvider()
 
-    logger.warning("Provider %s not recognized, defaulting to Qwen", provider_name)
-    try:
-        return QwenProvider(model_name=config.model_name)
-    except Exception:
-        logger.info("Falling back to mock provider")
-        return MockProvider()
+    # Unrecognized provider - fail loudly with clear message
+    msg = f"Unknown AI provider: {provider_name}. Valid options: qwen, ollama, mock"
+    logger.error(msg)
+    raise ValueError(msg)
 
 
 async def generate_text(prompt: str, max_tokens: int = 200) -> str:
