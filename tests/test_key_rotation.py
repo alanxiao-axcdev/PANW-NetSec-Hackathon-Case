@@ -17,7 +17,9 @@ import pytest
 from companion.models import RotationMetadata, RotationResult
 from companion.security.encryption import (
     decrypt_entry,
+    decrypt_full_entry_from_dict,
     encrypt_entry,
+    encrypt_full_entry_to_dict,
     get_rotation_metadata,
     rotate_keys,
     save_rotation_metadata,
@@ -56,12 +58,21 @@ def create_test_entries(test_entries_dir: Path) -> callable:
         Returns:
             List of created entry file paths
         """
+        import json
+        from companion.security.encryption import encrypt_full_entry_to_dict
+
         files = []
         for i in range(count):
-            content = f"Test journal entry {i}"
-            encrypted = encrypt_entry(content, passphrase)
+            # Create entry dict (what journal actually saves)
+            entry_dict = {
+                "id": f"test_{i}",
+                "content": f"Test journal entry {i}",
+                "timestamp": "2025-01-01T00:00:00"
+            }
+            # Encrypt as dict (JSON format that verify_passphrase expects)
+            encrypted_dict = encrypt_full_entry_to_dict(entry_dict, passphrase)
             file_path = test_entries_dir / f"entry_{i}.json"
-            file_path.write_bytes(encrypted)
+            file_path.write_text(json.dumps(encrypted_dict))
             files.append(file_path)
         return files
 
@@ -73,23 +84,23 @@ class TestPassphraseVerification:
 
     def test_verify_correct_passphrase(self, test_entries_dir: Path) -> None:
         """Test verification with correct passphrase."""
-        # Create test file
-        content = "Secret content"
+        # Create test file with full entry format
+        entry_dict = {"id": "test", "content": "Secret content"}
         passphrase = "correct_pass"
-        encrypted = encrypt_entry(content, passphrase)
+        encrypted_dict = encrypt_full_entry_to_dict(entry_dict, passphrase)
         test_file = test_entries_dir / "test.json"
-        test_file.write_bytes(encrypted)
+        test_file.write_text(json.dumps(encrypted_dict))
 
         # Verify
         assert verify_passphrase(passphrase, test_file) is True
 
     def test_verify_wrong_passphrase(self, test_entries_dir: Path) -> None:
         """Test verification with wrong passphrase."""
-        # Create test file
-        content = "Secret content"
-        encrypted = encrypt_entry(content, "correct_pass")
+        # Create test file with full entry format
+        entry_dict = {"id": "test", "content": "Secret content"}
+        encrypted_dict = encrypt_full_entry_to_dict(entry_dict, "correct_pass")
         test_file = test_entries_dir / "test.json"
-        test_file.write_bytes(encrypted)
+        test_file.write_text(json.dumps(encrypted_dict))
 
         # Verify with wrong passphrase
         assert verify_passphrase("wrong_pass", test_file) is False
@@ -144,9 +155,10 @@ class TestKeyRotation:
         assert verify_passphrase(new_pass, files[0]) is True
 
         # Verify content is intact
-        encrypted = files[0].read_bytes()
-        decrypted = decrypt_entry(encrypted, new_pass)
-        assert decrypted == "Test journal entry 0"
+        with open(files[0]) as f:
+            encrypted_dict = json.load(f)
+        decrypted_dict = decrypt_full_entry_from_dict(encrypted_dict, new_pass)
+        assert decrypted_dict["content"] == "Test journal entry 0"
 
     def test_rotate_multiple_entries(
         self, test_entries_dir: Path, create_test_entries: callable
@@ -170,9 +182,10 @@ class TestKeyRotation:
         # Verify all entries work with new passphrase
         for i, file_path in enumerate(files):
             assert verify_passphrase(new_pass, file_path) is True
-            encrypted = file_path.read_bytes()
-            decrypted = decrypt_entry(encrypted, new_pass)
-            assert decrypted == f"Test journal entry {i}"
+            with open(file_path) as f:
+                encrypted_dict = json.load(f)
+            decrypted_dict = decrypt_full_entry_from_dict(encrypted_dict, new_pass)
+            assert decrypted_dict["content"] == f"Test journal entry {i}"
 
     def test_rotate_wrong_old_passphrase(
         self, test_entries_dir: Path, create_test_entries: callable
@@ -506,9 +519,10 @@ class TestIntegration:
 
         # Step 10: Verify content integrity
         for i, file_path in enumerate(files):
-            encrypted = file_path.read_bytes()
-            decrypted = decrypt_entry(encrypted, new_pass)
-            assert decrypted == f"Test journal entry {i}"
+            with open(file_path) as f:
+                encrypted_dict = json.load(f)
+            decrypted_dict = decrypt_full_entry_from_dict(encrypted_dict, new_pass)
+            assert decrypted_dict["content"] == f"Test journal entry {i}"
 
     def test_rotation_then_second_rotation(
         self, test_entries_dir: Path, create_test_entries: callable
@@ -543,6 +557,7 @@ class TestIntegration:
 
         # Verify content still intact
         for i, file_path in enumerate(files):
-            encrypted = file_path.read_bytes()
-            decrypted = decrypt_entry(encrypted, pass3)
-            assert decrypted == f"Test journal entry {i}"
+            with open(file_path) as f:
+                encrypted_dict = json.load(f)
+            decrypted_dict = decrypt_full_entry_from_dict(encrypted_dict, pass3)
+            assert decrypted_dict["content"] == f"Test journal entry {i}"
