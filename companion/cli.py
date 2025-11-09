@@ -23,7 +23,13 @@ from companion import analyzer, config, journal, prompter, summarizer
 from companion.models import JournalEntry
 from companion.monitoring import dashboard, health
 from companion.passphrase_prompt import get_passphrase
-from companion.security.audit import decrypt_audit_log, log_security_event, verify_audit_log_integrity
+from companion.security.audit import (
+    decrypt_audit_log,
+    log_event_encrypted,
+    log_security_event,
+    verify_audit_log_integrity,
+)
+from companion.session import get_session
 from companion.security.passphrase import (
     PassphraseStrength,
     check_passphrase_strength,
@@ -32,6 +38,30 @@ from companion.security.passphrase import (
 
 logger = logging.getLogger(__name__)
 console = Console()
+
+
+def _log_security_event_encrypted(event_type: str, details: dict, severity: str = "info") -> None:
+    """Log security event with encryption using session passphrase.
+
+    Always encrypts audit logs. Falls back to plaintext only if no passphrase available.
+    """
+    try:
+        from pathlib import Path
+
+        # Get passphrase from session
+        session = get_session()
+        passphrase = session.get_passphrase()
+
+        if passphrase:
+            # Use encrypted logging
+            audit_file = Path.home() / ".companion" / "audit.log"
+            log_event_encrypted(event_type, details, passphrase, audit_file)
+        else:
+            # Fallback to plaintext if no passphrase (shouldn't happen but defensive)
+            log_security_event(event_type, details, severity)
+    except Exception as e:
+        logger.debug(f"Audit logging failed: {e}")
+        # Don't break user flow if audit fails
 
 
 def _display_greeting() -> None:
@@ -274,8 +304,8 @@ def write() -> None:
                 console.print("[yellow]Entry cancelled. Run 'companion write' to try again.[/yellow]")
                 return
 
-            # Log PII detection
-            log_security_event(
+            # Log PII detection (encrypted)
+            _log_security_event_encrypted(
                 "pii_detected",
                 {"entry_id": "pending", "pii_count": len(pii_matches)},
                 severity="warning"
@@ -295,8 +325,8 @@ def write() -> None:
             console.print("[dim]This entry contains patterns similar to prompt injection.[/dim]")
             console.print("[dim]Since this is your personal journal, this is likely fine.[/dim]\n")
 
-            # Log detection
-            log_security_event(
+            # Log detection (encrypted)
+            _log_security_event_encrypted(
                 "prompt_injection_detected",
                 {"risk_level": risk.level, "type": risk.type},
                 severity="warning"
@@ -324,8 +354,8 @@ def write() -> None:
     with console.status("[cyan]Saving entry..."):
         journal.save_entry(entry, passphrase=passphrase)
 
-    # Log entry creation
-    log_security_event(
+    # Log entry creation (encrypted)
+    _log_security_event_encrypted(
         "entry_created",
         {"entry_id": entry.id, "content_length": len(entry.content)},
         severity="info"
@@ -357,8 +387,8 @@ def write() -> None:
             entry.themes = [theme.name for theme in themes[:5]]
             journal.save_entry(entry, passphrase=passphrase)
 
-            # Log analysis completion
-            log_security_event(
+            # Log analysis completion (encrypted)
+            _log_security_event_encrypted(
                 "analysis_complete",
                 {
                     "entry_id": entry.id,
@@ -836,47 +866,60 @@ def audit(decrypt: bool, verify: bool, limit: int) -> None:
             console.print()
         return
 
-    if decrypt:
-        passphrase = Prompt.ask("Enter passphrase", password=True)
-        console.print("\n[cyan]Decrypting audit log...[/cyan]\n")
+    # Audit logs are always encrypted - require passphrase
+    passphrase = Prompt.ask("Enter passphrase", password=True)
 
-        events = decrypt_audit_log(audit_file, passphrase)
+    if verify:
+        console.print("\n[cyan]Verifying audit log integrity...[/cyan]")
 
-        if not events:
-            console.print("[yellow]No audit events found or decryption failed[/yellow]")
-            return
+        integrity_ok, tampered = verify_audit_log_integrity(audit_file, passphrase)
 
-        console.print(f"[bold cyan]Security Audit Log[/bold cyan] (Last {limit} events)\n")
-        console.print("─" * 80)
-
-        # Display last N events
-        for event in events[-limit:]:
-            timestamp = event.get('timestamp', 'unknown')[:19]  # Strip timezone
-            event_type = event.get('event_type', 'unknown').upper()
-
-            # Format based on event type
-            if event_type == 'MODEL_INFERENCE':
-                duration = event.get('duration_ms', 0)
-                model = event.get('model_name', 'unknown')
-                console.print(f"[cyan]{timestamp}[/cyan]  {event_type:20s}  Duration: {duration:.1f}ms  Model: {model}")
-            elif event_type == 'DATA_ACCESS':
-                operation = event.get('operation', 'unknown')
-                entry_count = event.get('entry_count', 0)
-                console.print(f"[cyan]{timestamp}[/cyan]  {event_type:20s}  {operation}: {entry_count} entries")
-            elif event_type == 'SECURITY_EVENT':
-                subtype = event.get('subtype', 'unknown')
-                severity = event.get('severity', 'info')
-                severity_color = {'info': 'green', 'warning': 'yellow', 'error': 'red', 'critical': 'red bold'}.get(severity, 'white')
-                console.print(f"[cyan]{timestamp}[/cyan]  {event_type:20s}  [{severity_color}]{subtype}[/{severity_color}]")
-            else:
-                console.print(f"[cyan]{timestamp}[/cyan]  {event_type}")
-
-        console.print("─" * 80)
-        console.print(f"\n[dim]Total events: {len(events)}[/dim]\n")
+        if integrity_ok:
+            console.print("[green]✓ Audit log integrity verified - no tampering detected[/green]\n")
+        else:
+            console.print("[red]⚠️  TAMPERING DETECTED![/red]")
+            console.print("\nCompromised entries:")
+            for entry in tampered:
+                console.print(f"  [red]- {entry}[/red]")
+            console.print()
         return
 
-    # Default: show plaintext audit log if not encrypted
-    console.print("\n[yellow]Use --decrypt to view encrypted logs or --verify to check integrity[/yellow]\n")
+    # Default behavior: decrypt and display
+    console.print("\n[cyan]Decrypting audit log...[/cyan]\n")
+
+    events = decrypt_audit_log(audit_file, passphrase)
+
+    if not events:
+        console.print("[yellow]No audit events found or decryption failed[/yellow]")
+        return
+
+    console.print(f"[bold cyan]Security Audit Log[/bold cyan] (Last {limit} events)\n")
+    console.print("─" * 80)
+
+    # Display last N events
+    for event in events[-limit:]:
+        timestamp = event.get('timestamp', 'unknown')[:19]  # Strip timezone
+        event_type = event.get('event_type', 'unknown').upper()
+
+        # Format based on event type
+        if event_type == 'MODEL_INFERENCE':
+            duration = event.get('duration_ms', 0)
+            model = event.get('model_name', 'unknown')
+            console.print(f"[cyan]{timestamp}[/cyan]  {event_type:20s}  Duration: {duration:.1f}ms  Model: {model}")
+        elif event_type == 'DATA_ACCESS':
+            operation = event.get('operation', 'unknown')
+            entry_count = event.get('entry_count', 0)
+            console.print(f"[cyan]{timestamp}[/cyan]  {event_type:20s}  {operation}: {entry_count} entries")
+        elif event_type == 'SECURITY_EVENT':
+            subtype = event.get('subtype', 'unknown')
+            severity = event.get('severity', 'info')
+            severity_color = {'info': 'green', 'warning': 'yellow', 'error': 'red', 'critical': 'red bold'}.get(severity, 'white')
+            console.print(f"[cyan]{timestamp}[/cyan]  {event_type:20s}  [{severity_color}]{subtype}[/{severity_color}]")
+        else:
+            console.print(f"[cyan]{timestamp}[/cyan]  {event_type}")
+
+    console.print("─" * 80)
+    console.print(f"\n[dim]Total events: {len(events)}[/dim]\n")
 
 
 @main.command()
