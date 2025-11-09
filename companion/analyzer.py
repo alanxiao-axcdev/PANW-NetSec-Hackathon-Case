@@ -20,6 +20,8 @@ async def analyze_sentiment(text: str) -> Sentiment:
     Uses AI to classify text as positive, neutral, or negative
     with confidence score.
 
+    Sanitizes PII before sending to AI model for privacy protection.
+
     Args:
         text: Journal entry content to analyze
 
@@ -34,9 +36,26 @@ async def analyze_sentiment(text: str) -> Sentiment:
         msg = "Text cannot be empty"
         raise ValueError(msg)
 
+    # Sanitize PII before sending to AI (even though Qwen is local)
+    from companion.security.pii_detector import detect_pii
+
+    sanitized_text = text
+    try:
+        pii_matches = detect_pii(text)
+        if pii_matches:
+            # Redact PII for AI analysis (keeps sentiment intact)
+            for match in sorted(pii_matches, key=lambda m: m.start, reverse=True):
+                # Replace PII with generic placeholder
+                placeholder = f"[{match.type}]"
+                sanitized_text = sanitized_text[:match.start] + placeholder + sanitized_text[match.end:]
+            logger.debug("Sanitized %d PII instances before AI analysis", len(pii_matches))
+    except Exception as e:
+        logger.debug("PII sanitization failed (non-critical): %s", e)
+        # Continue with original text if sanitization fails
+
     prompt = f"""Analyze the sentiment of this journal entry.
 
-Entry: "{text[:500]}"
+Entry: "{sanitized_text[:500]}"
 
 Respond with ONLY ONE WORD (no explanation, no punctuation):
 - positive (if the entry expresses positive emotions)
@@ -121,6 +140,8 @@ async def extract_themes(text: str) -> list[Theme]:
 
     Uses AI to identify main topics and themes present in the text.
 
+    Sanitizes PII before sending to AI model for privacy protection.
+
     Args:
         text: Journal entry content
 
@@ -135,9 +156,25 @@ async def extract_themes(text: str) -> list[Theme]:
         msg = "Text cannot be empty"
         raise ValueError(msg)
 
+    # Sanitize PII before sending to AI (even though Qwen is local)
+    from companion.security.pii_detector import detect_pii
+
+    sanitized_text = text
+    try:
+        pii_matches = detect_pii(text)
+        if pii_matches:
+            # Redact PII for AI analysis (preserves themes)
+            for match in sorted(pii_matches, key=lambda m: m.start, reverse=True):
+                placeholder = f"[{match.type}]"
+                sanitized_text = sanitized_text[:match.start] + placeholder + sanitized_text[match.end:]
+            logger.debug("Sanitized %d PII instances before AI analysis", len(pii_matches))
+    except Exception as e:
+        logger.debug("PII sanitization failed (non-critical): %s", e)
+        # Continue with original text if sanitization fails
+
     prompt = f"""Read this journal entry and identify 2-4 main themes or topics.
 
-Entry: "{text[:500]}"
+Entry: "{sanitized_text[:500]}"
 
 List the themes as comma-separated single words (no explanations).
 
