@@ -404,6 +404,31 @@ def write() -> None:
 
         analyzed_entry, themes_str = asyncio.run(analyze_entry())
 
+        # Data Poisoning Detection - check for anomalies
+        try:
+            from companion.security_research.data_poisoning_detector import build_user_baseline, detect_poisoning_attempt
+
+            # Get recent entries for baseline
+            baseline_entries = journal.get_recent_entries(limit=10, passphrase=passphrase)
+            if len(baseline_entries) >= 3:  # Need enough for baseline
+                baseline = build_user_baseline(baseline_entries[:-1])  # Exclude current entry
+                risk = detect_poisoning_attempt(analyzed_entry, baseline)
+
+                if risk.level in ["HIGH", "MEDIUM"]:
+                    console.print(f"\n[yellow]⚠️  Anomaly Detected: This entry differs from your usual style[/yellow]")
+                    console.print(f"[dim]Risk level: {risk.level}[/dim]")
+                    console.print(f"[dim]Score: {risk.score:.2f}[/dim]")
+                    console.print("[dim]Indicators: " + ", ".join(risk.indicators.keys())[:50] + "[/dim]\n")
+
+                    # Log detection
+                    _log_security_event_encrypted(
+                        "data_poisoning_detected",
+                        {"entry_id": analyzed_entry.id, "risk_level": risk.level, "score": risk.score},
+                        severity="warning"
+                    )
+        except Exception as e:
+            logger.debug("Data poisoning detection failed: %s", e)
+
         # Display analysis
         console.print(f"\nSentiment: [cyan]{analyzed_entry.sentiment.label.title()}[/cyan]", style="dim")  # type: ignore
         console.print(f"Themes: [cyan]{themes_str}[/cyan]\n", style="dim")

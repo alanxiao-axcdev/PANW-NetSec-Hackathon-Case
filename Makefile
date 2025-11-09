@@ -34,13 +34,13 @@ test-performance: ## Run performance benchmarks
 check: lint typecheck ## Run all code quality checks
 
 lint: ## Run ruff linter
-	ruff check .
+	uv run ruff check .
 
 format: ## Format code with ruff
-	ruff format .
+	uv run ruff format .
 
 typecheck: ## Run type checking with pyright
-	pyright
+	uv run pyright
 
 # Application targets
 run: ## Run companion CLI

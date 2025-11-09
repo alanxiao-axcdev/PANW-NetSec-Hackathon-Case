@@ -123,9 +123,22 @@ async def generate_text(prompt: str, max_tokens: int = 200) -> str:
         msg = "Provider not initialized"
         raise RuntimeError(msg)
 
+    import time
+
+    start_time = time.time()
+
     try:
         result = await _provider.generate(prompt, max_tokens=max_tokens)
-        logger.debug("Generated %d chars from prompt", len(result))
+
+        # Record metrics
+        duration_ms = (time.time() - start_time) * 1000
+        try:
+            from companion.monitoring import metrics
+            metrics.record_inference_time(duration_ms)
+        except Exception as e:
+            logger.debug("Metrics recording failed: %s", e)
+
+        logger.debug("Generated %d chars from prompt in %.1fms", len(result), duration_ms)
         return result
     except Exception as e:
         logger.error("Text generation failed: %s", e)
