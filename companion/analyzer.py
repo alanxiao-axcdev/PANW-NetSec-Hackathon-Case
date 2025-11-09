@@ -163,19 +163,22 @@ Themes:"""
             response_clean = response_clean.split('.')[0]
 
         # Try to extract themes from response
-        theme_names = [t.strip().strip('"\'') for t in response_clean.split(",") if t.strip()]
+        theme_names = [t.strip().strip('"\'').rstrip('.') for t in response_clean.split(",") if t.strip()]
 
         # Filter out common non-theme words that might appear in verbose responses
         exclude_words = {"the", "and", "or", "but", "in", "on", "at", "to", "for", "of", "with", "a", "an", "is", "are", "was", "were"}
         theme_names = [name for name in theme_names if name not in exclude_words and len(name) > 2]
 
-        # If we didn't get any valid themes or got too many, use fallback
-        # Relaxed: accept 1-6 themes instead of requiring 2-6
-        if len(theme_names) > 6 or not theme_names:
-            logger.debug("Theme extraction unclear (got %d themes), using keyword fallback", len(theme_names))
+        # If we didn't get any valid themes, use fallback
+        if not theme_names:
+            logger.debug("Theme extraction unclear (got 0 themes), using keyword fallback")
             theme_names = _fallback_theme_extraction(text)
+        # If too many themes, take the most relevant ones (Qwen lists them in order of relevance)
+        elif len(theme_names) > 6:
+            logger.debug("Qwen returned %d themes, taking top 4", len(theme_names))
+            theme_names = theme_names[:4]
+        # If only 1 theme from AI - supplement with keyword detection
         elif len(theme_names) == 1:
-            # Only 1 theme from AI - supplement with keyword detection
             logger.debug("Only 1 theme from AI, supplementing with keywords")
             keyword_themes = _fallback_theme_extraction(text)
             # Add first keyword theme that's different from AI theme
