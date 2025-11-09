@@ -17,11 +17,21 @@ The application demonstrates production-level security engineering and AI threat
 ## Quick Start
 
 ```bash
+# Clone the repository
+git clone https://github.com/alanxiao-axcdev/PANW-NetSec-Hackathon-Case.git
+cd PANW-NetSec-Hackathon-Case/PANW1
+
+# Install dependencies
+make install
+
 # Activate virtual environment
 source .venv/bin/activate
 
-# Start writing in the interactive editor
+# Run the application
 python -m companion.cli write
+
+# Or view emotional trends
+python -m companion.cli trends
 
 # Verify all tests pass
 python -m pytest -v | tail -5
