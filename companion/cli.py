@@ -257,20 +257,28 @@ def write() -> None:
     """
     _display_greeting()
 
-    # Get recent entries for context (skip if encrypted and no passphrase)
-    try:
-        cfg_obj = config.load_config()
-        passphrase_temp = None
-        if cfg_obj.enable_encryption:
-            # Try to get cached passphrase, don't prompt yet
-            from companion.session import get_session
-            session = get_session()
-            passphrase_temp = session.get_passphrase()
+    # Get passphrase early to enable context loading from previous entries
+    cfg_obj = config.load_config()
+    passphrase = None
+    if cfg_obj.enable_encryption:
+        try:
+            passphrase = get_passphrase()
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Cancelled.[/yellow]")
+            return
+        except ValueError as e:
+            # Max attempts exceeded
+            console.print(f"\n[red]{e}[/red]")
+            console.print("[yellow]Please try again later.[/yellow]")
+            return
 
-        recent_entries = journal.get_recent_entries(limit=5, passphrase=passphrase_temp)
-    except Exception:
-        # If can't load recent, just use empty list
-        recent_entries = []
+    # Load recent entries for context (passphrase now available!)
+    recent_entries = []
+    try:
+        recent_entries = journal.get_recent_entries(limit=5, passphrase=passphrase)
+    except Exception as e:
+        logger.debug("Could not load recent entries: %s", e)
+        # Continue with empty list - graceful degradation
 
     # Load idle threshold from config
     config_obj = config.load_config()
@@ -358,17 +366,7 @@ def write() -> None:
         duration_seconds=duration
     )
 
-    # Get passphrase if encryption enabled
-    cfg_obj = config.load_config()
-    passphrase = None
-    if cfg_obj.enable_encryption:
-        try:
-            passphrase = get_passphrase()
-        except KeyboardInterrupt:
-            console.print("\n[yellow]Cancelled.[/yellow]")
-            return
-
-    # Save entry
+    # Save entry (passphrase already cached from session start)
     with console.status("[cyan]Saving entry..."):
         journal.save_entry(entry, passphrase=passphrase)
 
