@@ -6,12 +6,19 @@ to prevent resource exhaustion and limit potential security risks.
 
 import logging
 import multiprocessing as mp
-import resource
 import signal
+import sys
 from collections.abc import Callable
 from typing import Any
 
 import psutil
+
+# resource module is Unix-only, not available on Windows
+try:
+    import resource
+    HAS_RESOURCE = True
+except ImportError:
+    HAS_RESOURCE = False
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +57,10 @@ def limit_resources(
         ...     limit_resources(max_memory_mb=1024, max_cpu_seconds=60)
         ...     # Do work within limits
     """
+    if not HAS_RESOURCE:
+        logger.warning("Resource limits not available on this platform (Windows)")
+        return
+
     try:
         # Set memory limit (address space)
         max_memory_bytes = max_memory_mb * 1024 * 1024
@@ -168,10 +179,11 @@ def run_sandboxed(
         # Check exit code
         if process.exitcode != 0:
             # Process crashed or was killed
-            if process.exitcode == -signal.SIGXCPU:
+            # SIGXCPU and SIGKILL are Unix-only signals
+            if HAS_RESOURCE and hasattr(signal, 'SIGXCPU') and process.exitcode == -signal.SIGXCPU:
                 msg = f"CPU time limit exceeded ({max_cpu_seconds}s)"
                 raise ResourceLimitError(msg)
-            if process.exitcode == -signal.SIGKILL:
+            if hasattr(signal, 'SIGKILL') and process.exitcode == -signal.SIGKILL:
                 msg = "Process was killed (likely memory limit exceeded)"
                 raise ResourceLimitError(msg)
             msg = f"Process exited with code {process.exitcode}"

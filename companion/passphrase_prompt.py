@@ -129,9 +129,7 @@ def setup_first_passphrase() -> str:
     session = get_session()
     session.set_passphrase(passphrase)
 
-    console.print("
-[green]✓ Passphrase configured successfully![/green]
-")
+    console.print("\n[green]✓ Passphrase configured successfully![/green]\n")
 
     return passphrase
 
@@ -169,10 +167,8 @@ def get_passphrase(prompt_text: str = "Enter passphrase") -> str:
     
     # If no hash stored (legacy install), do first-time setup
     if not cfg.passphrase_hash:
-        console.print("
-[yellow]⚠️  Passphrase verification not configured.[/yellow]")
-        console.print("[dim]Setting up passphrase verification for security...[/dim]
-")
+        console.print("\n[yellow]⚠️  Passphrase verification not configured.[/yellow]")
+        console.print("[dim]Setting up passphrase verification for security...[/dim]\n")
         return setup_first_passphrase()
 
     # Prompt for passphrase with verification
@@ -190,15 +186,11 @@ def get_passphrase(prompt_text: str = "Enter passphrase") -> str:
         
         # Failed verification
         if attempt < max_attempts:
-            console.print(f"
-[red]❌ Incorrect passphrase ({attempt}/{max_attempts} attempts)[/red]")
-            console.print("[dim]Try again...[/dim]
-")
+            console.print(f"\n[red]❌ Incorrect passphrase ({attempt}/{max_attempts} attempts)[/red]")
+            console.print("[dim]Try again...[/dim]\n")
         else:
-            console.print(f"
-[red]❌ Incorrect passphrase ({max_attempts}/{max_attempts} attempts)[/red]")
-            console.print("[red]Maximum attempts exceeded.[/red]
-")
+            console.print(f"\n[red]❌ Incorrect passphrase ({max_attempts}/{max_attempts} attempts)[/red]")
+            console.print("[red]Maximum attempts exceeded.[/red]\n")
             raise ValueError("Maximum passphrase attempts exceeded")
     
     # Should never reach here but defensive
