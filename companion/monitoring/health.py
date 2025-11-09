@@ -13,14 +13,31 @@ def check_model_loaded() -> HealthStatus:
     """Check if AI model is loaded and responsive.
 
     Returns:
-        HealthStatus with component status
+        HealthStatus with AI model status
     """
-    # TODO: Actually check model status via ai_engine
-    # For now, return OK (will integrate with ai_engine later)
+    from companion import ai_engine
+
+    if not ai_engine.is_initialized():
+        return HealthStatus(
+            component="ai_model",
+            status="DEGRADED",
+            message="AI model not initialized (run: companion health --ai)"
+        )
+
+    health_info = ai_engine.get_provider_health()
+
+    if health_info["initialized"] and health_info["model_loaded"]:
+        provider = health_info["provider_name"]
+        return HealthStatus(
+            component="ai_model",
+            status="OK",
+            message=f"{provider} loaded and ready"
+        )
+
     return HealthStatus(
         component="ai_model",
-        status="OK",
-        message="Model check not yet implemented"
+        status="DOWN",
+        message=f"Provider {health_info['provider_name']} failed to load"
     )
 
 

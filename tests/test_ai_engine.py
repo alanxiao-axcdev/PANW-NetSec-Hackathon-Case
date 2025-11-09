@@ -49,6 +49,30 @@ async def test_generate_text(reset_engine):
     assert len(result) > 0
 
 
+def test_get_provider_health_when_not_initialized(reset_engine):
+    """Test health function returns status when not initialized."""
+    health = ai_engine.get_provider_health()
+
+    assert isinstance(health, dict)
+    assert health["provider_name"] == "None"
+    assert health["initialized"] is False
+    assert health["model_loaded"] is False
+    assert health["error"] == "No provider initialized"
+
+
+@pytest.mark.asyncio
+async def test_get_provider_health_when_initialized(reset_engine):
+    """Test health function returns status after initialization."""
+    await ai_engine.initialize_model()
+    health = ai_engine.get_provider_health()
+
+    assert isinstance(health, dict)
+    assert "provider_name" in health
+    assert "initialized" in health
+    assert health["initialized"] is True
+    assert health["provider_name"] in ["QwenProvider", "MockProvider"]
+
+
 @pytest.mark.asyncio
 async def test_generate_text_empty_prompt(reset_engine):
     """Test that empty prompt raises error."""

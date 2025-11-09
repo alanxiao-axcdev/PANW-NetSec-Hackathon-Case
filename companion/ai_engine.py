@@ -207,6 +207,41 @@ def is_initialized() -> bool:
     return _initialized and _provider is not None
 
 
+def get_provider_health() -> dict[str, str | bool | float | None]:
+    """Get current AI provider health status.
+
+    Returns detailed information about the active provider including
+    initialization status, model details, and recent errors.
+
+    Returns:
+        Dict with health information:
+        {
+            "provider_name": str,
+            "initialized": bool,
+            "model_loaded": bool,
+            "error": str | None,
+            "last_inference_time_ms": float | None
+        }
+    """
+    if _provider is None:
+        return {
+            "provider_name": "None",
+            "initialized": False,
+            "model_loaded": False,
+            "error": "No provider initialized",
+            "last_inference_time_ms": None,
+        }
+
+    health = _provider.get_health()
+    return {
+        "provider_name": health.provider_name,
+        "initialized": health.is_initialized,
+        "model_loaded": health.model_loaded,
+        "error": None if health.error_count == 0 else f"{health.error_count} recent errors",
+        "last_inference_time_ms": health.last_inference_time,
+    }
+
+
 async def shutdown() -> None:
     """Shutdown AI engine and cleanup resources."""
     global _provider, _initialized
