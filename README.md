@@ -1,4 +1,4 @@
-# 🏆 Companion - AI Security Infrastructure for PANW Hackathon
+# Companion - AI Security Infrastructure
 
 **Production-Ready AI Security Demonstration**
 
@@ -6,20 +6,18 @@
 
 ---
 
-## 🎯 What This Is
+## Overview
 
-**Not** just a journaling app.
+Companion is a comprehensive demonstration of enterprise-grade AI security infrastructure. While implemented as a journaling application, it showcases security patterns and research applicable to any AI system handling sensitive data.
 
-**But** a comprehensive demonstration of **enterprise-grade AI security infrastructure** using journaling as a relatable, testable use case.
-
-Built for **Palo Alto Networks R&D NetSec Hackathon** to showcase AI security engineering and production infrastructure thinking.
+The application demonstrates production-level security engineering and AI threat research methodologies suitable for security intelligence platforms, healthcare AI systems, legal technology, and enterprise automation.
 
 ---
 
-## ⚡ Quick Start
+## Quick Start
 
 ```bash
-cd /home/nyzio/amplifier/PANW1
+# Activate virtual environment
 source .venv/bin/activate
 
 # Start writing in the interactive editor
@@ -32,8 +30,8 @@ python -m pytest -v | tail -5
 **Interactive Writing Experience:**
 - Start with a blank slate (no upfront prompts)
 - Contextual AI prompts appear as subtle gray text
-- **Ctrl+D** to save your entry
-- **Ctrl+C** to cancel
+- Ctrl+D to save your entry
+- Ctrl+C to cancel
 - Nano-like editor UX for a natural writing flow
 
 **Visualize Your Patterns:**
@@ -45,11 +43,11 @@ python -m companion.cli trends
 - Top themes frequency chart
 - Sentiment distribution breakdown
 
-**That's it!** Works immediately with intelligent mock AI (no 3GB model download needed for demo).
+The system works immediately with intelligent mock AI (no 3GB model download needed for demonstration purposes).
 
 ---
 
-## 🛡️ Security Architecture (6 Layers)
+## Security Architecture (6 Layers)
 
 **Defense-in-Depth:**
 
@@ -60,66 +58,50 @@ python -m companion.cli trends
 5. **Brute Force Protection** - Rate limiting + account lockout
 6. **PII Detection** - Automatic data protection
 
-**Plus:** Memory security designed (Layer 7)
+**Additionally Designed:** Memory security architecture (Layer 7)
 
 ---
 
-## 🔬 AI Security Research
+## AI Security Research
 
 **Novel Contributions:**
-- **96.6%** prompt injection detection (classic OWASP attacks)
-- **86.8%** detection on 2024-2025 advanced techniques
-- **100% F1** on core PII types
-- **>70%** data poisoning detection
+- 96.6% prompt injection detection (classic OWASP attacks)
+- 86.8% detection on 2024-2025 advanced techniques
+- 100% F1 on core PII types
+- >70% data poisoning detection
 
-**Research Finding**: Regex excellent for known patterns, gaps with obfuscation → need semantic layer
+**Research Finding**: Regex excellent for known patterns, gaps with obfuscation require semantic layer
 
 **Test Datasets**: 135 labeled cases from latest research (FlipAttack, DeepSeek, ChatGPT exploits)
 
 ---
 
-## 📊 Project Stats
+## Project Metrics
 
-- ✅ **413 tests** passing (100%)
-- ✅ **76% coverage**
-- ✅ **27 commits** (clean history)
-- ✅ **30 modules** implemented
-- ✅ **~6,500 lines** code
-- ✅ **~9,431 lines** documentation
-
----
-
-## 🎤 For PANW Interview
-
-**Your story**:
-> "I built enterprise AI security infrastructure with 6 defense layers, conducted security research discovering regex vs obfuscation gaps, and demonstrated production thinking with key rotation, audit encryption, and brute force protection. 413 tests prove it works."
-
-**Read these**:
-1. **START_HERE.md** - Navigation guide
-2. **README_FOR_INTERVIEW.md** - Key numbers & Q&A
-3. **RESEARCH_METHODOLOGY.md** - Research narrative
-4. **FINAL_SECURITY_SHOWCASE.md** - Complete feature list
+- 413 tests passing (100%)
+- 76% coverage
+- 27 commits (clean history)
+- 30 modules implemented
+- ~6,500 lines code
+- ~9,431 lines documentation
 
 ---
 
-## 📁 Key Documents
+## Key Documentation
 
-**Presentation:**
-- `docs/PRESENTATION.md` - 7-minute outline
-- `DEMO_GUIDE.md` - 5-minute demo script
-
-**Security:**
+**Technical Documentation:**
 - `docs/THREAT_MODEL.md` - STRIDE analysis
 - `docs/SECURITY.md` - Architecture
 - `reports/security_test_report.md` - Real results
-
-**Architecture:**
 - `docs/DESIGN.md` - System design
-- `ARCHITECTURE_AND_ROADMAP.md` - Implemented vs designed
+- `ARCHITECTURE_AND_ROADMAP.md` - Implemented vs designed features
+
+**Security Research:**
+- `RESEARCH_METHODOLOGY.md` - Research narrative and findings
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 **30 Modules across 8 Domains:**
 - Core (11): Models, config, storage, journal, AI engine, analyzer, prompter, summarizer, CLI
@@ -131,35 +113,29 @@ python -m companion.cli trends
 
 ---
 
-## ✨ What Makes This Special
+## What Makes This Special
 
-**Not claiming perfection** - Showing real research:
-- Test → measure → find gaps → iterate
+**Research Methodology:**
+- Test, measure, find gaps, iterate
 - Honest limitation assessment
 - Next steps articulated
 
-**Production thinking**:
+**Production Thinking:**
 - Compliance (NIST, PCI-DSS, HIPAA, SOC 2)
 - Key lifecycle management
 - Audit trail protection
 - Operational security
 
-**Quality**:
+**Quality Assurance:**
 - 413 automated tests
 - 76% coverage
 - Clean git history
-- Comprehensive docs
+- Comprehensive documentation
 
 ---
 
-## 🚀 This Is Ready
+## Deployment Status
 
-**For your hackathon demo**: ✅ Works perfectly with mock AI
-**For production**: Ready for Qwen model integration
-**For PANW interview**: Shows enterprise security expertise
-
----
-
-**Location**: `/home/nyzio/amplifier/PANW1/`
-
-**Good luck! 🍀**
+**Demonstration**: Works with mock AI (no dependencies)
+**Production**: Ready for Qwen model integration
+**Enterprise**: Demonstrates security patterns for production AI systems

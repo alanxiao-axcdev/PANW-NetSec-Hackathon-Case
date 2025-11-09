@@ -296,11 +296,11 @@ To use quantized model:
 
 ## This Demonstrates (for PANW)
 
-✅ **Production ML engineering**: Model optimization, not just "it works"
-✅ **Edge deployment thinking**: Resource-constrained environments
-✅ **Performance optimization**: Quantitative before/after metrics
-✅ **Trade-off analysis**: Memory vs accuracy balance
-✅ **Real-world applicability**: Security AI on edge devices
+ **Production ML engineering**: Model optimization, not just "it works"
+ **Edge deployment thinking**: Resource-constrained environments
+ **Performance optimization**: Quantitative before/after metrics
+ **Trade-off analysis**: Memory vs accuracy balance
+ **Real-world applicability**: Security AI on edge devices
 
 ---
 

@@ -276,7 +276,7 @@ $ companion
 
 → Had coffee with John at 555-1234...
 
-⚠️  Possible PII detected:
+  Possible PII detected:
   • Name: "John" (confidence: 0.85)
   • Phone: "555-1234" (confidence: 0.99)
 
@@ -292,7 +292,7 @@ Choice: _
 ```bash
 $ companion export --output journal.txt
 
-⚠️  Export will be sanitized by default.
+  Export will be sanitized by default.
   • 12 names → [PERSON_N]
   • 3 phone numbers → [PHONE]
   • 2 addresses → [LOCATION]
@@ -817,19 +817,19 @@ def ship_to_siem(event: SecurityEvent):
 
 | Threat | Category | Impact | Likelihood | Risk | Mitigation Status |
 |--------|----------|--------|------------|------|-------------------|
-| Prompt Injection | Tampering, EoP | HIGH | MEDIUM | **MEDIUM-HIGH** | ✅ Implemented (93.6% detection) |
-| PII Leakage | Info Disclosure | HIGH | MEDIUM | **MEDIUM-HIGH** | ✅ Implemented (91.9% F1) |
-| Data Poisoning | Tampering | MEDIUM | LOW | **LOW-MEDIUM** | ✅ Implemented (86.7% detection) |
-| Model Theft | Info Disclosure | LOW-MED | LOW | **LOW** | ✅ Basic protection |
-| Resource Exhaustion | DoS | MEDIUM | LOW | **LOW-MEDIUM** | ✅ Implemented |
-| Unauthorized Access | Spoofing, Info | CRITICAL | MEDIUM | **HIGH** | ✅ Encryption at rest |
-| Audit Tampering | Tampering, Repud | MEDIUM | LOW | **LOW-MEDIUM** | ✅ Append-only logs |
+| Prompt Injection | Tampering, EoP | HIGH | MEDIUM | **MEDIUM-HIGH** |  Implemented (93.6% detection) |
+| PII Leakage | Info Disclosure | HIGH | MEDIUM | **MEDIUM-HIGH** |  Implemented (91.9% F1) |
+| Data Poisoning | Tampering | MEDIUM | LOW | **LOW-MEDIUM** |  Implemented (86.7% detection) |
+| Model Theft | Info Disclosure | LOW-MED | LOW | **LOW** |  Basic protection |
+| Resource Exhaustion | DoS | MEDIUM | LOW | **LOW-MEDIUM** |  Implemented |
+| Unauthorized Access | Spoofing, Info | CRITICAL | MEDIUM | **HIGH** |  Encryption at rest |
+| Audit Tampering | Tampering, Repud | MEDIUM | LOW | **LOW-MEDIUM** |  Append-only logs |
 
 ---
 
 ## OWASP LLM Top 10 Coverage
 
-### LLM01: Prompt Injection ✅
+### LLM01: Prompt Injection 
 
 **Status**: Addressed
 
@@ -843,7 +843,7 @@ def ship_to_siem(event: SecurityEvent):
 
 ---
 
-### LLM02: Insecure Output Handling ✅
+### LLM02: Insecure Output Handling 
 
 **Status**: Addressed
 
@@ -855,7 +855,7 @@ def ship_to_siem(event: SecurityEvent):
 
 ---
 
-### LLM03: Training Data Poisoning ✅
+### LLM03: Training Data Poisoning 
 
 **Status**: Addressed
 
@@ -867,7 +867,7 @@ def ship_to_siem(event: SecurityEvent):
 
 ---
 
-### LLM04: Model Denial of Service ✅
+### LLM04: Model Denial of Service 
 
 **Status**: Addressed
 
@@ -879,7 +879,7 @@ def ship_to_siem(event: SecurityEvent):
 
 ---
 
-### LLM05: Supply Chain Vulnerabilities ⚠️
+### LLM05: Supply Chain Vulnerabilities 
 
 **Status**: Partial
 
@@ -901,7 +901,7 @@ def ship_to_siem(event: SecurityEvent):
 
 ---
 
-### LLM06: Sensitive Information Disclosure ✅
+### LLM06: Sensitive Information Disclosure 
 
 **Status**: Addressed
 
@@ -914,7 +914,7 @@ def ship_to_siem(event: SecurityEvent):
 
 ---
 
-### LLM07: Insecure Plugin Design ✅
+### LLM07: Insecure Plugin Design 
 
 **Status**: Not Applicable
 
@@ -926,7 +926,7 @@ def ship_to_siem(event: SecurityEvent):
 
 ---
 
-### LLM08: Excessive Agency ✅
+### LLM08: Excessive Agency 
 
 **Status**: Addressed
 
@@ -939,7 +939,7 @@ def ship_to_siem(event: SecurityEvent):
 
 ---
 
-### LLM09: Overreliance ✅
+### LLM09: Overreliance 
 
 **Status**: Addressed
 
@@ -956,7 +956,7 @@ def ship_to_siem(event: SecurityEvent):
 
 ---
 
-### LLM10: Model Theft ✅
+### LLM10: Model Theft 
 
 **Status**: Basic protection
 
@@ -1116,12 +1116,12 @@ def ship_to_siem(event: SecurityEvent):
 
 Companion demonstrates that **local AI applications can achieve superior security** compared to cloud alternatives:
 
-✅ **Data stays local** - No network exposure
-✅ **Encryption at rest** - Protection against device theft
-✅ **Prompt injection defense** - 93.6% detection rate
-✅ **PII protection** - 91.9% F1 score detection
-✅ **Audit logging** - Complete security visibility
-✅ **Resource protection** - DoS mitigation
+ **Data stays local** - No network exposure
+ **Encryption at rest** - Protection against device theft
+ **Prompt injection defense** - 93.6% detection rate
+ **PII protection** - 91.9% F1 score detection
+ **Audit logging** - Complete security visibility
+ **Resource protection** - DoS mitigation
 
 **Key insight**: Combining traditional security practices (encryption, access control) with AI-specific mitigations (prompt injection detection, PII sanitization) creates robust defense-in-depth architecture suitable for sensitive data applications.
 

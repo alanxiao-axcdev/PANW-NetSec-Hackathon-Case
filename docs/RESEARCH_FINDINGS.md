@@ -1054,9 +1054,9 @@ User Input → Small classifier LLM → Risk score → Decision
 
 This research demonstrates that **local AI security is achievable** with appropriate layered defenses:
 
-✅ **Prompt injection detection**: 93.6% accuracy, low false positive rate
-✅ **PII detection**: 91.9% F1 score, handles diverse PII types
-✅ **Data poisoning detection**: 86.7% accuracy, catches systematic attacks
+ **Prompt injection detection**: 93.6% accuracy, low false positive rate
+ **PII detection**: 91.9% F1 score, handles diverse PII types
+ **Data poisoning detection**: 86.7% accuracy, catches systematic attacks
 
 **Key innovation**: Combining traditional security techniques (pattern matching, regex) with AI-specific methods (semantic analysis, baseline profiling) creates robust defense suitable for resource-constrained local deployment.
 

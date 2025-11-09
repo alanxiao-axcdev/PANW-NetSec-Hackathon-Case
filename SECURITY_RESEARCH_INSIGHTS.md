@@ -4,7 +4,7 @@
 
 ---
 
-## 🔬 Research Process Demonstrated
+##  Research Process Demonstrated
 
 ### Initial Implementation
 - 50 test cases from known attacks
@@ -22,7 +22,7 @@
 
 **Result**: Detection rate dropped to **86.8%** on enhanced dataset
 
-### What This Shows (Perfect for PANW Interview!)
+### What This Shows (Perfect for Technical Demonstration!)
 
 **This is REAL security research:**
 - Started with known attacks → Strong results
@@ -34,7 +34,7 @@
 
 ---
 
-## 💡 Findings for PANW Presentation
+##  Findings  Presentation
 
 ### **Strength: Classic Attack Detection**
 - 96.6% on original dataset
@@ -46,7 +46,7 @@
 - Unicode obfuscation reduces detection
 - **This is a research finding!**
 
-### **Next Iteration (Post-Hackathon)**
+### **Next Iteration (Post-demonstration)**
 - Add semantic analysis layer (not just regex)
 - ML-based anomaly detection
 - Entropy analysis for obfuscated content
@@ -54,7 +54,7 @@
 
 ---
 
-## 🎤 How to Present This
+##  How to Present This
 
 **Don't hide the 86.8%!**
 
@@ -67,7 +67,7 @@
 
 ---
 
-## 📊 Updated Test Dataset Stats
+##  Updated Test Dataset Stats
 
 **Prompt Injection:**
 - Original: 50 cases → 96.6% detection
@@ -86,24 +86,24 @@
 
 ---
 
-## 🎯 This Makes Your Presentation STRONGER
+##  This Makes Your Presentation STRONGER
 
-**Standard hackathon:**
+**Standard demonstration:**
 "I built detection that works!"
 
 **Your presentation:**
 "I built detection, tested against 2024-2025 attacks, discovered limitations, and can articulate the next research steps. Here's what I learned..."
 
 **This shows:**
-- ✅ Research mindset (not just implementation)
-- ✅ Honesty about limitations
-- ✅ Understanding of trade-offs
-- ✅ Knowledge of cutting-edge threats
-- ✅ Iterative improvement approach
+-  Research mindset (not just implementation)
+-  Honesty about limitations
+-  Understanding of trade-offs
+-  Knowledge of cutting-edge threats
+-  Iterative improvement approach
 
 ---
 
-## 📋 Talking Points
+##  Talking Points
 
 **"What I Built":**
 - Baseline detection with 96.6% on classic attacks
@@ -123,7 +123,7 @@
 
 ---
 
-## 🏆 Why This Is Better
+##  Why This Is Better
 
 You're not claiming perfection.
 

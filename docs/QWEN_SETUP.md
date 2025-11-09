@@ -49,7 +49,7 @@ Downloading model files: [████████] 100% 2.8GB
 
 Model loaded successfully!
 
-Good morning! ✨
+Good morning! 
 What's on your mind today?
 ```
 

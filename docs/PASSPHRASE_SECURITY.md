@@ -257,7 +257,7 @@ new_pass = Prompt.ask("New passphrase", password=True)
 # Check strength
 score = check_passphrase_strength(new_pass)
 if score.strength == PassphraseStrength.WEAK:
-    console.print(f"[yellow]⚠️  Weak passphrase (score: {score.score}/100)[/yellow]")
+    console.print(f"[yellow]  Weak passphrase (score: {score.score}/100)[/yellow]")
     for suggestion in score.feedback:
         console.print(f"  • {suggestion}")
     
@@ -293,7 +293,7 @@ $ companion rotate-keys
 
 Enter new passphrase: password123
 
-⚠️  Weak passphrase (score: 15/100)
+  Weak passphrase (score: 15/100)
   • Too short (8 chars, need 12+)
   • Common password (found in breach database)
   • No special characters
@@ -337,7 +337,7 @@ Enter passphrase: wrong5
 ✗ Incorrect passphrase (8 second delay)
 
 Enter passphrase: wrong6
-⚠️  Rate limit exceeded. Too many failed attempts.
+  Rate limit exceeded. Too many failed attempts.
    Try again in 15 minutes.
    
 Attempts: 6/5 in last 15 minutes
@@ -349,7 +349,7 @@ Next attempt allowed: 2025-01-08 15:15:00
 ```
 $ companion
 
-⚠️  Account locked due to repeated failed attempts.
+  Account locked due to repeated failed attempts.
    
 Total failed attempts: 10 in last 24 hours
 Account will unlock: 2025-01-09 14:30:00
@@ -408,11 +408,11 @@ All failed attempts logged to audit trail.
 
 ## This Demonstrates (for PANW)
 
-✅ **Authentication security**: Beyond encryption to access control
-✅ **Compliance awareness**: NIST, PCI-DSS requirements
-✅ **User experience**: Security that's user-friendly
-✅ **Defense-in-depth**: Multiple protection layers
-✅ **Operational security**: How to prevent common attacks
+ **Authentication security**: Beyond encryption to access control
+ **Compliance awareness**: NIST, PCI-DSS requirements
+ **User experience**: Security that's user-friendly
+ **Defense-in-depth**: Multiple protection layers
+ **Operational security**: How to prevent common attacks
 
 ---
 

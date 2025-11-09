@@ -11,7 +11,7 @@ Companion is an AI-powered journaling application that runs entirely on your dev
 **Key Features**:
 - 🤖 **Intelligent prompts** - Context-aware questions that appear when you need them
 - 🔒 **Complete privacy** - Everything runs locally, nothing leaves your device
-- 📊 **Pattern recognition** - Automatic sentiment and theme detection
+-  **Pattern recognition** - Automatic sentiment and theme detection
 - 📝 **Insightful summaries** - Weekly and monthly reflection reports
 - ⚡ **Zero configuration** - Works perfectly out of the box
 
@@ -93,13 +93,13 @@ This will take about 30 seconds:
 Passphrase: ********
 Confirm: ********
 
-✅ All set! Your journal is completely private and stays on this device.
+ All set! Your journal is completely private and stays on this device.
 
 Ready to start? (Press Enter)
 
 ───────────────────────────────────────────────
 
-Good evening! ✨
+Good evening! 
 
 What's on your mind today?
 
@@ -190,7 +190,7 @@ If Companion detects personally identifiable information, you'll get a warning:
 ```bash
 → Had lunch with Sarah at 555-1234...
 
-⚠️  Possible PII detected:
+  Possible PII detected:
   • Name: "Sarah" (confidence: 85%)
   • Phone: "555-1234" (confidence: 99%)
 
@@ -268,7 +268,7 @@ $ companion summary
 Weekly Reflection (Jan 1-7, 2025)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 This Week: 7 entries
+ This Week: 7 entries
 
 Emotional Journey:
   This week started with stress about the project deadline,
@@ -295,7 +295,7 @@ Looking Ahead:
   You mentioned wanting to establish better boundaries at work.
   How did that go this week?
 
-💡 Reflection Prompt:
+ Reflection Prompt:
   What's one thing you learned about yourself this week?
 ```
 
@@ -307,7 +307,7 @@ $ companion summary --month
 Monthly Reflection (January 2025)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📊 This Month: 28 entries
+ This Month: 28 entries
 
 [Detailed monthly analysis with trends, growth areas, and insights]
 ```
@@ -402,7 +402,7 @@ Export with automatic PII sanitization:
 ```bash
 $ companion export --output my_journal.txt
 
-⚠️  Export will be sanitized by default:
+  Export will be sanitized by default:
   • 12 names → [PERSON_N]
   • 3 phone numbers → [PHONE]
   • 2 addresses → [LOCATION]
@@ -444,7 +444,7 @@ Storage:
 Cache Performance:
   Hit Rate: 68%    Savings: 142 inference calls avoided
 
-Health Status: ✅ All systems operational
+Health Status:  All systems operational
 
 Last updated: 2 seconds ago
 Press Ctrl+C to exit
@@ -460,13 +460,13 @@ $ companion health
 Companion Health Check
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-✅ AI Model: Loaded and operational (Qwen2.5-1.5B-INT8)
-✅ Storage: Accessible (~235KB used, 128GB free)
-✅ Encryption: Operational (AES-256-GCM)
-✅ Memory: Healthy (1.2GB / 16GB available)
-✅ Disk Space: Sufficient (128GB free)
+ AI Model: Loaded and operational (Qwen2.5-1.5B-INT8)
+ Storage: Accessible (~235KB used, 128GB free)
+ Encryption: Operational (AES-256-GCM)
+ Memory: Healthy (1.2GB / 16GB available)
+ Disk Space: Sufficient (128GB free)
 
-Overall Status: ✅ HEALTHY
+Overall Status:  HEALTHY
 
 All systems operational. Your journal is ready to use.
 ```

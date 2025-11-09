@@ -337,7 +337,7 @@ $ companion
 
 [Memory protections: core dumps disabled, memory locked]
 
-Good morning! ✨
+Good morning! 
 ...
 ```
 
@@ -391,16 +391,16 @@ Threats Mitigated:
 ## Limitations & Trade-offs
 
 **What This Protects Against:**
-- ✅ Memory dump by malware
-- ✅ Core dump on crash
-- ✅ Swap file persistence
-- ✅ Debugging artifact exposure
+-  Memory dump by malware
+-  Core dump on crash
+-  Swap file persistence
+-  Debugging artifact exposure
 
 **What This Does NOT Protect Against:**
-- ❌ Physical memory extraction (cold boot attack requires hardware)
-- ❌ Kernel-level rootkits (OS compromise)
-- ❌ Side-channel attacks (timing, cache)
-- ❌ Spectre/Meltdown class vulnerabilities
+-  Physical memory extraction (cold boot attack requires hardware)
+-  Kernel-level rootkits (OS compromise)
+-  Side-channel attacks (timing, cache)
+-  Spectre/Meltdown class vulnerabilities
 
 **Trade-offs:**
 - **Performance**: Minimal (~1-2ms per operation)
@@ -454,13 +454,13 @@ Threats Mitigated:
 
 ## This Demonstrates (for PANW)
 
-✅ **Deep security expertise**: Beyond encryption to memory protection
-✅ **Threat modeling**: Considers full attack surface (not just network)
-✅ **Defense-in-depth**: Protecting data at rest, in transit, AND in use
-✅ **Research awareness**: Knows academic security literature
-✅ **Practical trade-offs**: Understands performance vs security balance
-✅ **Platform knowledge**: OS-specific security APIs
-✅ **Compliance**: NIST, PCI-DSS memory protection requirements
+ **Deep security expertise**: Beyond encryption to memory protection
+ **Threat modeling**: Considers full attack surface (not just network)
+ **Defense-in-depth**: Protecting data at rest, in transit, AND in use
+ **Research awareness**: Knows academic security literature
+ **Practical trade-offs**: Understands performance vs security balance
+ **Platform knowledge**: OS-specific security APIs
+ **Compliance**: NIST, PCI-DSS memory protection requirements
 
 ---
 

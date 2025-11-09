@@ -223,7 +223,7 @@ companion config set rotation_interval 60  # 60 days
 ```
 $ companion rotate-keys
 
-⚠️  Key Rotation will re-encrypt all journal entries.
+  Key Rotation will re-encrypt all journal entries.
    This limits exposure if your passphrase is compromised.
 
 Current passphrase: ****
@@ -248,7 +248,7 @@ Next rotation due: 2025-04-08 (90 days)
 ```
 $ companion
 
-⚠️  Key rotation recommended (last rotated 95 days ago)
+  Key rotation recommended (last rotated 95 days ago)
    Run: companion rotate-keys
    Or: companion config set rotation_reminder false
 
@@ -273,11 +273,11 @@ $ companion
 
 ## This Demonstrates (for PANW)
 
-✅ **Security best practices**: Key rotation is standard practice
-✅ **Operational thinking**: How do you maintain security over time?
-✅ **Zero-downtime operations**: Rotate without data loss
-✅ **Compliance awareness**: PCI-DSS, HIPAA requirements
-✅ **User experience**: Make security transparent
+ **Security best practices**: Key rotation is standard practice
+ **Operational thinking**: How do you maintain security over time?
+ **Zero-downtime operations**: Rotate without data loss
+ **Compliance awareness**: PCI-DSS, HIPAA requirements
+ **User experience**: Make security transparent
 
 ---
 

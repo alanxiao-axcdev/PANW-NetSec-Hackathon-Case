@@ -203,10 +203,10 @@ Security Audit Log (Last 7 days)
 
 ## This Demonstrates (for PANW)
 
-✅ **Defense-in-depth**: Protecting the protection mechanism
-✅ **Forensics thinking**: Audit logs must be trustworthy
-✅ **Tamper resistance**: Cryptographic integrity
-✅ **Operational security**: How to maintain evidence in adversarial environments
+ **Defense-in-depth**: Protecting the protection mechanism
+ **Forensics thinking**: Audit logs must be trustworthy
+ **Tamper resistance**: Cryptographic integrity
+ **Operational security**: How to maintain evidence in adversarial environments
 
 ---
 

@@ -1063,7 +1063,7 @@ Thank you for contributing to Companion!
 - Write tests
 - Be patient with reviews
 
-We're here to help. Happy coding! 🚀
+We're here to help. Happy coding! 
 
 ---
 

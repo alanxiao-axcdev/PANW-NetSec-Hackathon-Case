@@ -1064,14 +1064,14 @@ See [PERFORMANCE.md](PERFORMANCE.md) for complete benchmarks.
 ### Achieved Performance (Intel i7-12700K)
 
 **Latency**:
-- P50: 198ms ✅
-- P95: 445ms ✅
-- P99: 891ms ✅
-- Cold start: 3.1s ✅
+- P50: 198ms 
+- P95: 445ms 
+- P99: 891ms 
+- Cold start: 3.1s 
 
 **Memory**:
-- Peak: 1.4GB ✅
-- Idle: 380MB ✅
+- Peak: 1.4GB 
+- Idle: 380MB 
 
 ---
 
@@ -1149,11 +1149,11 @@ def analyze_sentiment(text: str) -> Sentiment:
 
 Companion's architecture demonstrates that **local AI applications can achieve production-grade quality** through:
 
-✅ **Modular design** - Clear boundaries, testable components
-✅ **Security-first** - Defense-in-depth, threat modeling
-✅ **Observable** - Metrics, health checks, dashboards
-✅ **Performant** - Quantization, caching, batching
-✅ **Regeneratable** - Specs enable AI-assisted development
+ **Modular design** - Clear boundaries, testable components
+ **Security-first** - Defense-in-depth, threat modeling
+ **Observable** - Metrics, health checks, dashboards
+ **Performant** - Quantization, caching, batching
+ **Regeneratable** - Specs enable AI-assisted development
 
 This architecture serves as a **reference implementation** for any AI system handling sensitive user data with on-device processing.
 

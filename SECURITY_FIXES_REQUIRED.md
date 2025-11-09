@@ -8,7 +8,7 @@ This document tracks the security enhancements needed for the Companion journali
 
 ---
 
-## ✅ FIXED: Critical Entry Metadata Encryption Vulnerability
+##  FIXED: Critical Entry Metadata Encryption Vulnerability
 
 ### Issue
 Entry files exposed sensitive metadata in plaintext:
@@ -19,7 +19,7 @@ Entry files exposed sensitive metadata in plaintext:
 - Session duration
 
 ### Fix Applied (2025-11-08)
-**Status**: ✅ COMPLETE
+**Status**:  COMPLETE
 
 **Changes**:
 1. **Full Entry Encryption**: Entire entry (content + all metadata) now encrypted as single blob
@@ -44,7 +44,7 @@ Entry files exposed sensitive metadata in plaintext:
 **Verification**:
 ```bash
 uv run pytest tests/test_full_metadata_encryption.py -v
-# ✅ 7/7 tests pass
+#  7/7 tests pass
 ```
 
 ---
@@ -63,7 +63,7 @@ uv run pytest tests/test_full_metadata_encryption.py -v
 **Tests confirm functionality**:
 ```bash
 uv run pytest tests/test_audit_encryption.py -v
-# ✅ 11/11 tests pass
+#  11/11 tests pass
 ```
 
 ### Issue
@@ -78,7 +78,7 @@ def _write_entry(self, event_type: str, details: dict[str, Any]) -> None:
         **details,
     }
     with self.log_path.open("a", encoding="utf-8") as f:
-        f.write(json.dumps(entry, ensure_ascii=False) + "\n")  # ❌ PLAINTEXT
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")  #  PLAINTEXT
 ```
 
 ### Required Fix
@@ -99,7 +99,7 @@ def _write_entry(self, event_type: str, details: dict[str, Any]) -> None:
 
 ---
 
-## ✅ Config File Security
+##  Config File Security
 
 ### Status
 **Config file is SAFE as plaintext**

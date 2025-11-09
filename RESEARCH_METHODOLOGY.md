@@ -1,10 +1,10 @@
 # Companion - Security Research Methodology & Findings
 
-**Demonstrating Real-World AI Security Research for PANW R&D NetSec**
+**Demonstrating Real-World AI Security Research for **
 
 ---
 
-## 📋 Research Methodology
+##  Research Methodology
 
 ### Phase 1: Baseline Implementation (Initial)
 
@@ -66,8 +66,8 @@
 **Specific Gaps Found:**
 - FlipAttack (reversed text): **Not detected** by regex
 - Base64 long strings: Partial detection (70% confidence)
-- Unicode zero-width: Detected (80% confidence) ✅
-- HTML comments: Detected (85% confidence) ✅
+- Unicode zero-width: Detected (80% confidence) 
+- HTML comments: Detected (85% confidence) 
 - Multi-language: Partially detected (depends on instruction words)
 
 ---
@@ -94,7 +94,7 @@
 
 ---
 
-## 🔬 Research Findings
+##  Research Findings
 
 ### Finding 1: Regex Effective for Classic Attacks
 
@@ -169,9 +169,9 @@
 ## 📈 Iterative Improvement Plan
 
 ### Iteration 1: Current (Implemented)
-- ✅ Regex-based detection
-- ✅ 96.6% on classic attacks
-- ✅ Production-ready baseline
+-  Regex-based detection
+-  96.6% on classic attacks
+-  Production-ready baseline
 
 ### Iteration 2: Semantic Layer (Next)
 - Add transformer-based semantic analysis
@@ -187,7 +187,7 @@
 
 ---
 
-## 🎤 Presentation Talking Points
+##  Presentation Talking Points
 
 ### Opening: The Research Journey
 
@@ -232,7 +232,7 @@
 
 ---
 
-## 🔑 Key Messages for PANW
+##  Key Messages 
 
 ### Message 1: Research Mindset
 "I researched latest threats, not just implemented features"
@@ -251,7 +251,7 @@
 
 ---
 
-## 📊 Research Contributions Summary
+##  Research Contributions Summary
 
 | Contribution | Description | Impact |
 |--------------|-------------|--------|
@@ -263,34 +263,34 @@
 
 ---
 
-## 💡 Limitations (Document Honestly!)
+##  Limitations (Document Honestly!)
 
 ### Current Limitations
 
 **Prompt Injection:**
-- ❌ FlipAttack not detected (character reversal)
-- ⚠️ Base64 partial detection (suspicious strings flagged)
-- ⚠️ Multi-language partial (depends on instruction words)
-- ✅ Unicode obfuscation detected
-- ✅ HTML hiding detected
+-  FlipAttack not detected (character reversal)
+-  Base64 partial detection (suspicious strings flagged)
+-  Multi-language partial (depends on instruction words)
+-  Unicode obfuscation detected
+-  HTML hiding detected
 
 **PII Detection:**
-- ✅ Common PII excellent (SSN, email, phone, credit card)
-- ❌ HIPAA PHI patterns missing (MRN, health conditions)
-- ❌ Biometric/genetic data not detected
-- ❌ International financial IDs (IBAN, SWIFT) not detected
+-  Common PII excellent (SSN, email, phone, credit card)
+-  HIPAA PHI patterns missing (MRN, health conditions)
+-  Biometric/genetic data not detected
+-  International financial IDs (IBAN, SWIFT) not detected
 
 **Data Poisoning:**
-- ✅ Instruction density effective
-- ⚠️ Requires baseline (10-20 entries)
-- ⚠️ Subtle long-term manipulation harder
-- ❌ Semantic drift needs embedding layer
+-  Instruction density effective
+-  Requires baseline (10-20 entries)
+-  Subtle long-term manipulation harder
+-  Semantic drift needs embedding layer
 
 ---
 
-## 🎯 Future Research Directions
+##  Future Research Directions
 
-### Short-term (Post-Hackathon)
+### Short-term (Post-demonstration)
 1. Add semantic similarity detection for obfuscated attacks
 2. Expand PII patterns for GDPR Article 9 + HIPAA
 3. Implement embedding-based semantic drift
@@ -328,7 +328,7 @@
 
 ---
 
-## ✨ This Is Your Differentiator!
+##  This Is Your Differentiator!
 
 **Standard candidate**: "I built detection with 96% accuracy!"
 
@@ -338,4 +338,4 @@
 
 ---
 
-**Use this methodology documentation to show you think like a researcher!** 🔬
+**Use this methodology documentation to show you think like a researcher!** 

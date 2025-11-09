@@ -55,13 +55,13 @@ encrypted = AES256_GCM.encrypt(json.dumps(entry_data), key)
 - Optional OS keyring integration
 
 **Threat mitigation**:
-- ✅ Protects against: Disk theft, unauthorized access, forensic recovery
-- ✅ Defends against: Physical access to storage files
-- ❌ Does not protect against: Memory dumps while process running, keystroke loggers
+-  Protects against: Disk theft, unauthorized access, forensic recovery
+-  Defends against: Physical access to storage files
+-  Does not protect against: Memory dumps while process running, keystroke loggers
 
 ---
 
-### Layer 2: Model Sandboxing 🏖️
+### Layer 2: Model Sandboxing 🏖
 
 **Isolation**:
 - Model inference runs in isolated subprocess
@@ -98,9 +98,9 @@ def validate_model_output(output: str) -> tuple[bool, str]:
 ```
 
 **Threat mitigation**:
-- ✅ Protects against: Model attempting file access, network calls, resource exhaustion
-- ✅ Defends against: Malicious model weights, compromised dependencies
-- ❌ Does not protect against: Vulnerabilities in PyTorch itself
+-  Protects against: Model attempting file access, network calls, resource exhaustion
+-  Defends against: Malicious model weights, compromised dependencies
+-  Does not protect against: Vulnerabilities in PyTorch itself
 
 ---
 
@@ -150,13 +150,13 @@ companion audit --event MODEL_INFERENCE --last 24h
 - Authentication events (passphrase entry)
 
 **Threat mitigation**:
-- ✅ Enables: Forensic analysis, compliance reporting, anomaly detection
-- ✅ Supports: Security investigations, behavior analysis
-- ❌ Does not prevent: The events themselves, only provides visibility
+-  Enables: Forensic analysis, compliance reporting, anomaly detection
+-  Supports: Security investigations, behavior analysis
+-  Does not prevent: The events themselves, only provides visibility
 
 ---
 
-### Layer 4: PII Protection 🛡️
+### Layer 4: PII Protection 
 
 **Detection**:
 - Regex patterns for structured PII (SSN, credit cards, phone numbers)
@@ -176,7 +176,7 @@ companion audit --event MODEL_INFERENCE --last 24h
 pii_matches = pii_detector.detect(entry.content)
 
 if pii_matches:
-    print("\n⚠️  Possible PII detected:")
+    print("\n  Possible PII detected:")
     for match in pii_matches:
         print(f"  • {match.type}: {match.value[:10]}... (confidence: {match.confidence:.2f})")
     
@@ -196,9 +196,9 @@ if pii_matches:
 - **Tokenize**: Reversible replacement (`[PERSON_1]`)
 
 **Threat mitigation**:
-- ✅ Protects against: Accidental PII exposure, data breaches
-- ✅ Enables: Safe sharing of journal exports
-- ❌ Does not protect against: User intentionally disabling PII protection
+-  Protects against: Accidental PII exposure, data breaches
+-  Enables: Safe sharing of journal exports
+-  Does not protect against: User intentionally disabling PII protection
 
 ---
 
@@ -241,9 +241,9 @@ def sanitize_for_context(text: str) -> str:
 ```
 
 **Threat mitigation**:
-- ✅ Protects against: User entries manipulating AI behavior
-- ✅ Detects: 93.6% of known injection attempts
-- ❌ False positives: 5.1% (legitimate content flagged)
+-  Protects against: User entries manipulating AI behavior
+-  Detects: 93.6% of known injection attempts
+-  False positives: 5.1% (legitimate content flagged)
 
 ---
 
@@ -275,9 +275,9 @@ if poisoning_risk.level == "HIGH":
 ```
 
 **Threat mitigation**:
-- ✅ Protects against: Systematic attempts to bias AI behavior
-- ✅ Detects: 86.7% of poisoning attempts
-- ❌ Does not protect against: Subtle, long-term manipulation
+-  Protects against: Systematic attempts to bias AI behavior
+-  Detects: 86.7% of poisoning attempts
+-  Does not protect against: Subtle, long-term manipulation
 
 ---
 
@@ -290,16 +290,16 @@ $ companion health --security
 
 Security Health Check
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✅ Encryption: AES-256-GCM initialized
-✅ Audit logging: Active and writable
-✅ Model isolation: Process sandbox operational
-✅ PII detection: Loaded (presidio-analyzer)
-✅ Injection detection: 78 patterns loaded
-✅ Poisoning detection: Baseline established
+ Encryption: AES-256-GCM initialized
+ Audit logging: Active and writable
+ Model isolation: Process sandbox operational
+ PII detection: Loaded (presidio-analyzer)
+ Injection detection: 78 patterns loaded
+ Poisoning detection: Baseline established
 
-Disk encryption: ✅ FileVault enabled (macOS)
-Network isolation: ✅ No outbound connections detected
-Resource limits: ✅ Memory cap 4GB, CPU cap 80%
+Disk encryption:  FileVault enabled (macOS)
+Network isolation:  No outbound connections detected
+Resource limits:  Memory cap 4GB, CPU cap 80%
 
 Last security scan: 2 minutes ago
 Status: All systems secure
@@ -416,12 +416,12 @@ See [THREAT_MODEL.md](THREAT_MODEL.md) for comprehensive threat analysis includi
 ## Security Roadmap
 
 **Current (v0.1)**:
-- ✅ Encrypted storage
-- ✅ Model sandboxing
-- ✅ Audit logging
-- ✅ PII detection
-- ✅ Prompt injection detection
-- ✅ Data poisoning detection
+-  Encrypted storage
+-  Model sandboxing
+-  Audit logging
+-  PII detection
+-  Prompt injection detection
+-  Data poisoning detection
 
 **Future enhancements**:
 - [ ] Hardware security module (HSM) integration for key storage

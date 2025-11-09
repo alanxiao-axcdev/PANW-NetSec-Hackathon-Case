@@ -139,10 +139,10 @@ companion benchmark --quantization
 ```
 
 **Quality Checks**:
-1. Accuracy within 5% of original (✅ 2.3% actual)
-2. No catastrophic failures (✅ all outputs coherent)
-3. Latency improvement >20% (✅ 31% actual)
-4. Memory reduction >60% (✅ 74% actual)
+1. Accuracy within 5% of original ( 2.3% actual)
+2. No catastrophic failures ( all outputs coherent)
+3. Latency improvement >20% ( 31% actual)
+4. Memory reduction >60% ( 74% actual)
 
 ---
 
@@ -338,9 +338,9 @@ Improvement: 35% ↑
 - Batch of 8: -78ms per entry (amortized)
 
 **Use Cases**:
-- Summary generation ✅ (always multiple entries)
-- Bulk analysis ✅ (user imports old journal)
-- Real-time journaling ❌ (single entry, latency-sensitive)
+- Summary generation  (always multiple entries)
+- Bulk analysis  (user imports old journal)
+- Real-time journaling  (single entry, latency-sensitive)
 
 ---
 
@@ -454,7 +454,7 @@ Throughput:
   Current session: 5.1 entries/sec
   Batch mode: 6.9 entries/sec
 
-Health Status: ✅ All systems optimal
+Health Status:  All systems optimal
 ```
 
 ### Benchmark Suite
@@ -501,7 +501,7 @@ Theme Precision   94.1%       92.8%        -1.3%
 Theme Recall      91.7%       90.2%        -1.5%
 Summary Quality   4.6/5.0     4.5/5.0      -0.1
 
-✅ All quality thresholds passed
+ All quality thresholds passed
 ```
 
 ---
@@ -518,7 +518,7 @@ Performance varies by hardware:
 Model load: 3.1s
 Inference P50: 198ms
 Memory usage: 1.2GB
-Status: ✅ Optimal performance
+Status:  Optimal performance
 ```
 
 ### Profile 2: Mid-Range Laptop
@@ -529,7 +529,7 @@ Status: ✅ Optimal performance
 Model load: 5.2s
 Inference P50: 342ms
 Memory usage: 1.4GB (occasional swapping)
-Status: ⚠️ Acceptable, consider 16GB RAM
+Status:  Acceptable, consider 16GB RAM
 ```
 
 ### Profile 3: Low-End System
@@ -540,7 +540,7 @@ Status: ⚠️ Acceptable, consider 16GB RAM
 Model load: 12.8s
 Inference P50: 892ms
 Memory usage: 1.8GB (frequent swapping)
-Status: ❌ Below recommended specs
+Status:  Below recommended specs
 Recommendation: Use lighter model or cloud option
 ```
 
@@ -552,7 +552,7 @@ Recommendation: Use lighter model or cloud option
 Model load: 1.8s (Metal acceleration)
 Inference P50: 124ms (40% faster than x86)
 Memory usage: 1.1GB
-Status: ✅ Excellent performance
+Status:  Excellent performance
 ```
 
 ---
@@ -629,13 +629,13 @@ make test-performance
 
 ### For Single-User Deployment (Current)
 
-✅ **Implemented**:
+ **Implemented**:
 - INT8 quantization
 - Semantic caching
 - Dynamic batching
 - Performance monitoring
 
-📋 **Recommended Next Steps**:
+ **Recommended Next Steps**:
 - Add GPU acceleration (optional)
 - Implement ONNX export
 - Add model warm-up on app launch
@@ -672,16 +672,16 @@ Per-User Cache (Redis)
 
 ### What Worked Well
 
-✅ **INT8 Quantization**: Massive memory savings (74%) with minimal accuracy loss (2.3%)
-✅ **Semantic Caching**: High hit rate (68%) on repeated patterns
-✅ **Batching**: Significant speedup for multi-entry operations
-✅ **Monitoring**: Real-time visibility into performance
+ **INT8 Quantization**: Massive memory savings (74%) with minimal accuracy loss (2.3%)
+ **Semantic Caching**: High hit rate (68%) on repeated patterns
+ **Batching**: Significant speedup for multi-entry operations
+ **Monitoring**: Real-time visibility into performance
 
 ### What Didn't Work
 
-❌ **Aggressive Quantization (INT4)**: Too much accuracy degradation (>10%)
-❌ **Exact Match Caching**: Hit rate only 12% (too strict)
-❌ **Synchronous Batching**: Added latency without throughput gain
+ **Aggressive Quantization (INT4)**: Too much accuracy degradation (>10%)
+ **Exact Match Caching**: Hit rate only 12% (too strict)
+ **Synchronous Batching**: Added latency without throughput gain
 
 ### Lessons Learned
 
