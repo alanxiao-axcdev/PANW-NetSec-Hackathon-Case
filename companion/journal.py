@@ -2,18 +2,19 @@
 
 Provides functions for creating, reading, updating, and searching journal entries.
 All entries are stored as JSON files with UUID-only filenames for privacy.
-Content is encrypted using AES-256-GCM when encryption is enabled.
+ALL entry data (content + metadata) is encrypted using AES-256-GCM when encryption is enabled.
 """
 
-import json
 import logging
 from datetime import date, datetime
-from pathlib import Path
-from typing import Optional
 
 from companion.config import load_config
 from companion.models import JournalEntry
-from companion.security.encryption import decrypt_entry_from_dict, encrypt_entry_to_dict
+from companion.security.encryption import (
+    decrypt_entry_from_dict,
+    decrypt_full_entry_from_dict,
+    encrypt_full_entry_to_dict,
+)
 from companion.storage import ensure_dir, list_entry_files, read_json, write_json
 
 logger = logging.getLogger(__name__)
@@ -31,11 +32,29 @@ def _is_encrypted(entry_data: dict) -> bool:
     return all(key in entry_data for key in ["salt", "nonce", "ciphertext"])
 
 
-def save_entry(entry: JournalEntry, passphrase: Optional[str] = None) -> str:
+def _is_legacy_encryption(entry_data: dict) -> bool:
+    """Check if entry uses legacy content-only encryption.
+
+    Legacy format has plaintext metadata fields (timestamp, sentiment, themes, etc.)
+    alongside encrypted content.
+
+    Args:
+        entry_data: Dictionary containing entry data
+
+    Returns:
+        True if this is legacy content-only encryption
+    """
+    # Legacy has encrypted content BUT also has plaintext metadata
+    has_encryption = _is_encrypted(entry_data)
+    has_plaintext_metadata = "timestamp" in entry_data or "themes" in entry_data
+    return has_encryption and has_plaintext_metadata
+
+
+def save_entry(entry: JournalEntry, passphrase: str | None = None) -> str:
     """Save journal entry to storage.
 
     Creates a new JSON file with UUID-only filename for privacy.
-    Encrypts content if passphrase provided and encryption enabled.
+    Encrypts ALL entry data (content + metadata) if passphrase provided and encryption enabled.
 
     Args:
         entry: JournalEntry to save
@@ -65,28 +84,19 @@ def save_entry(entry: JournalEntry, passphrase: Optional[str] = None) -> str:
 
     try:
         if encrypt_enabled and passphrase:
-            # Encrypt the content
-            encrypted_content = encrypt_entry_to_dict(entry.content, passphrase)
+            # Get full entry dict
+            entry_dict = entry.model_dump(mode="json")
 
-            # Store encrypted entry with metadata
-            entry_dict = {
-                "id": entry.id,
-                "timestamp": entry.timestamp.isoformat(),
-                "encrypted": True,
-                "salt": encrypted_content["salt"],
-                "nonce": encrypted_content["nonce"],
-                "ciphertext": encrypted_content["ciphertext"],
-                "sentiment": entry.sentiment.model_dump(mode="json") if entry.sentiment else None,
-                "themes": entry.themes,
-                "next_session_prompts": entry.next_session_prompts,
-                "duration_seconds": entry.duration_seconds,
-            }
+            # Encrypt ENTIRE entry (all metadata + content)
+            encrypted_entry = encrypt_full_entry_to_dict(entry_dict, passphrase)
+
+            write_json(file_path, encrypted_entry)
         else:
             # Store plaintext entry
             entry_dict = entry.model_dump(mode="json")
             entry_dict["encrypted"] = False
+            write_json(file_path, entry_dict)
 
-        write_json(file_path, entry_dict)
         logger.info("Saved entry: %s (encrypted: %s)", entry.id, encrypt_enabled)
         return entry.id
 
@@ -95,10 +105,11 @@ def save_entry(entry: JournalEntry, passphrase: Optional[str] = None) -> str:
         raise
 
 
-def get_entry(entry_id: str, passphrase: Optional[str] = None) -> JournalEntry | None:
+def get_entry(entry_id: str, passphrase: str | None = None) -> JournalEntry | None:
     """Retrieve entry by ID.
 
     Searches for entry file by UUID and decrypts if necessary.
+    Supports both new full-encryption and legacy content-only encryption.
 
     Args:
         entry_id: UUID of entry to retrieve
@@ -133,16 +144,21 @@ def get_entry(entry_id: str, passphrase: Optional[str] = None) -> JournalEntry |
                 msg = f"Entry {entry_id} is encrypted but no passphrase provided"
                 raise ValueError(msg)
 
-            # Decrypt content
-            content = decrypt_entry_from_dict(entry_data, passphrase)
-
-            # Reconstruct entry with decrypted content
-            entry_data["content"] = content
-            # Remove encryption fields before creating JournalEntry
-            entry_data.pop("salt", None)
-            entry_data.pop("nonce", None)
-            entry_data.pop("ciphertext", None)
-            entry_data.pop("encrypted", None)
+            # Check if legacy (content-only) or new (full) encryption
+            if _is_legacy_encryption(entry_data):
+                # LEGACY: Only content is encrypted, metadata is plaintext
+                logger.debug("Decrypting legacy content-only entry: %s", entry_id)
+                content = decrypt_entry_from_dict(entry_data, passphrase)
+                entry_data["content"] = content
+                # Remove encryption fields
+                entry_data.pop("salt", None)
+                entry_data.pop("nonce", None)
+                entry_data.pop("ciphertext", None)
+                entry_data.pop("encrypted", None)
+            else:
+                # NEW: Full entry encryption (all metadata + content)
+                logger.debug("Decrypting full entry: %s", entry_id)
+                entry_data = decrypt_full_entry_from_dict(entry_data, passphrase)
 
         return JournalEntry(**entry_data)
 
@@ -152,10 +168,11 @@ def get_entry(entry_id: str, passphrase: Optional[str] = None) -> JournalEntry |
         raise ValueError(msg) from e
 
 
-def get_recent_entries(limit: int = 10, passphrase: Optional[str] = None) -> list[JournalEntry]:
+def get_recent_entries(limit: int = 10, passphrase: str | None = None) -> list[JournalEntry]:
     """Get most recent journal entries.
 
     Returns entries sorted by timestamp (newest first).
+    Supports both new full-encryption and legacy content-only encryption.
 
     Args:
         limit: Maximum number of entries to return (default: 10)
@@ -197,14 +214,18 @@ def get_recent_entries(limit: int = 10, passphrase: Optional[str] = None) -> lis
                     logger.warning("Skipping encrypted entry (no passphrase): %s", file_path.name)
                     continue
 
-                # Decrypt content
-                content = decrypt_entry_from_dict(entry_data, passphrase)
-                entry_data["content"] = content
-                # Remove encryption fields
-                entry_data.pop("salt", None)
-                entry_data.pop("nonce", None)
-                entry_data.pop("ciphertext", None)
-                entry_data.pop("encrypted", None)
+                # Check if legacy or new encryption
+                if _is_legacy_encryption(entry_data):
+                    # LEGACY: Content-only encryption
+                    content = decrypt_entry_from_dict(entry_data, passphrase)
+                    entry_data["content"] = content
+                    entry_data.pop("salt", None)
+                    entry_data.pop("nonce", None)
+                    entry_data.pop("ciphertext", None)
+                    entry_data.pop("encrypted", None)
+                else:
+                    # NEW: Full entry encryption
+                    entry_data = decrypt_full_entry_from_dict(entry_data, passphrase)
 
             entry = JournalEntry(**entry_data)
             entries.append(entry)
@@ -220,9 +241,11 @@ def get_recent_entries(limit: int = 10, passphrase: Optional[str] = None) -> lis
 def get_entries_by_date_range(
     start: date,
     end: date,
-    passphrase: Optional[str] = None,
+    passphrase: str | None = None,
 ) -> list[JournalEntry]:
     """Get entries within date range.
+
+    Supports both new full-encryption and legacy content-only encryption.
 
     Args:
         start: Start date (inclusive)
@@ -264,14 +287,18 @@ def get_entries_by_date_range(
                     logger.warning("Skipping encrypted entry (no passphrase): %s", file_path.name)
                     continue
 
-                # Decrypt content
-                content = decrypt_entry_from_dict(entry_data, passphrase)
-                entry_data["content"] = content
-                # Remove encryption fields
-                entry_data.pop("salt", None)
-                entry_data.pop("nonce", None)
-                entry_data.pop("ciphertext", None)
-                entry_data.pop("encrypted", None)
+                # Check if legacy or new encryption
+                if _is_legacy_encryption(entry_data):
+                    # LEGACY: Content-only encryption
+                    content = decrypt_entry_from_dict(entry_data, passphrase)
+                    entry_data["content"] = content
+                    entry_data.pop("salt", None)
+                    entry_data.pop("nonce", None)
+                    entry_data.pop("ciphertext", None)
+                    entry_data.pop("encrypted", None)
+                else:
+                    # NEW: Full entry encryption
+                    entry_data = decrypt_full_entry_from_dict(entry_data, passphrase)
 
             entry = JournalEntry(**entry_data)
 
@@ -286,10 +313,11 @@ def get_entries_by_date_range(
     return entries
 
 
-def search_entries(query: str, passphrase: Optional[str] = None) -> list[JournalEntry]:
+def search_entries(query: str, passphrase: str | None = None) -> list[JournalEntry]:
     """Search entries by text content.
 
     Performs case-insensitive substring search in entry content.
+    Supports both new full-encryption and legacy content-only encryption.
 
     Args:
         query: Search query string
@@ -329,14 +357,18 @@ def search_entries(query: str, passphrase: Optional[str] = None) -> list[Journal
                     logger.warning("Skipping encrypted entry (no passphrase): %s", file_path.name)
                     continue
 
-                # Decrypt content
-                content = decrypt_entry_from_dict(entry_data, passphrase)
-                entry_data["content"] = content
-                # Remove encryption fields
-                entry_data.pop("salt", None)
-                entry_data.pop("nonce", None)
-                entry_data.pop("ciphertext", None)
-                entry_data.pop("encrypted", None)
+                # Check if legacy or new encryption
+                if _is_legacy_encryption(entry_data):
+                    # LEGACY: Content-only encryption
+                    content = decrypt_entry_from_dict(entry_data, passphrase)
+                    entry_data["content"] = content
+                    entry_data.pop("salt", None)
+                    entry_data.pop("nonce", None)
+                    entry_data.pop("ciphertext", None)
+                    entry_data.pop("encrypted", None)
+                else:
+                    # NEW: Full entry encryption
+                    entry_data = decrypt_full_entry_from_dict(entry_data, passphrase)
 
             entry = JournalEntry(**entry_data)
 

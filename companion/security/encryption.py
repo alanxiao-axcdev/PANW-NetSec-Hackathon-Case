@@ -10,7 +10,7 @@ import logging
 import os
 import shutil
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import NamedTuple
 
@@ -480,3 +480,84 @@ def should_rotate(config_dir: Path, rotation_interval_days: int = 90) -> bool:
         return False  # No previous rotation
 
     return datetime.now() >= metadata.next_rotation_due
+
+
+def encrypt_full_entry_to_dict(entry_data: dict, passphrase: str) -> dict[str, str]:
+    """Encrypt entire entry (all metadata and content) for JSON storage.
+
+    Encrypts the complete entry dictionary as a single blob, preserving only
+    the entry ID and encryption metadata fields needed for decryption.
+
+    Args:
+        entry_data: Complete entry dictionary to encrypt
+        passphrase: Encryption passphrase
+
+    Returns:
+        Dictionary with only: id, encrypted, salt, nonce, ciphertext
+        All other entry data is encrypted within ciphertext.
+
+    Example:
+        >>> entry = {"id": "123", "timestamp": "2025-01-01T00:00:00", "content": "secret", ...}
+        >>> encrypted = encrypt_full_entry_to_dict(entry, "pass123")
+        >>> set(encrypted.keys())
+        {'id', 'encrypted', 'salt', 'nonce', 'ciphertext'}
+    """
+    # Extract ID (needed for file lookup)
+    entry_id = entry_data.get("id")
+    if not entry_id:
+        msg = "Entry must have an 'id' field"
+        raise ValueError(msg)
+
+    # Encrypt entire entry as JSON
+    entry_json = json.dumps(entry_data, ensure_ascii=False, default=str)
+    encrypted = encrypt_entry(entry_json, passphrase)
+
+    salt = encrypted[:SALT_LENGTH]
+    nonce = encrypted[SALT_LENGTH : SALT_LENGTH + NONCE_LENGTH]
+    ciphertext = encrypted[SALT_LENGTH + NONCE_LENGTH :]
+
+    return {
+        "id": entry_id,
+        "encrypted": True,
+        "salt": base64.b64encode(salt).decode("ascii"),
+        "nonce": base64.b64encode(nonce).decode("ascii"),
+        "ciphertext": base64.b64encode(ciphertext).decode("ascii"),
+    }
+
+
+def decrypt_full_entry_from_dict(data: dict[str, str], passphrase: str) -> dict:
+    """Decrypt full entry from dictionary format.
+
+    Decrypts complete entry data that was encrypted with encrypt_full_entry_to_dict().
+
+    Args:
+        data: Dictionary with base64-encoded salt, nonce, and ciphertext
+        passphrase: Decryption passphrase
+
+    Returns:
+        Complete decrypted entry dictionary with all metadata and content
+
+    Example:
+        >>> encrypted_dict = encrypt_full_entry_to_dict(entry, "pass123")
+        >>> decrypted = decrypt_full_entry_from_dict(encrypted_dict, "pass123")
+        >>> decrypted["content"]
+        'secret'
+    """
+    try:
+        salt = base64.b64decode(data["salt"])
+        nonce = base64.b64decode(data["nonce"])
+        ciphertext = base64.b64decode(data["ciphertext"])
+    except (KeyError, ValueError) as e:
+        msg = f"Invalid encrypted data format: {e}"
+        raise ValueError(msg) from e
+
+    encrypted = salt + nonce + ciphertext
+    entry_json = decrypt_entry(encrypted, passphrase)
+
+    try:
+        entry_data = json.loads(entry_json)
+    except json.JSONDecodeError as e:
+        msg = f"Decrypted data is not valid JSON: {e}"
+        raise ValueError(msg) from e
+
+    return entry_data
