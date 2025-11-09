@@ -304,7 +304,7 @@ def write() -> None:
             # Update entry with analysis
             entry.sentiment = sentiment
             entry.themes = [theme.name for theme in themes[:5]]
-            journal.save_entry(entry)
+            journal.save_entry(entry, passphrase=passphrase)
 
             # Log analysis completion
             log_security_event(
