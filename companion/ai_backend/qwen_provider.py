@@ -87,7 +87,7 @@ class QwenProvider(AIProvider):
                 self.model_name,
                 cache_dir=str(self.cache_dir),
                 trust_remote_code=True,
-                torch_dtype="auto",
+                dtype="auto",
             )
             self.model.to(self.device)
             self.model.eval()
