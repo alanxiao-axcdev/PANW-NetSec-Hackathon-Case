@@ -104,13 +104,13 @@ The system works immediately with intelligent mock AI (no 3GB model download nee
 
 ## Architecture
 
-**30 Modules across 8 Domains:**
-- Core (11): Models, config, storage, journal, AI engine, analyzer, prompter, summarizer, CLI
-- Security (6): Encryption, sandboxing, audit, PII, passphrase, key rotation
-- AI Backend (5): Abstract interface + 4 providers
-- Security Research (4): Injection, PII, poisoning, testing
-- Monitoring (3): Metrics, health, dashboard
-- Utils (3): Retry, circuit breaker, error handling
+**38 Modules across 6 Domains:**
+- Core (13): Models, config, storage, journal, session, passphrase prompt, AI engine, analyzer, prompter, summarizer, trends, CLI
+- Security (6): Encryption, sandboxing, audit, PII detector, passphrase
+- AI Backend (6): Base, Qwen, Ollama, OpenAI, Mock providers
+- Security Research (5): Prompt injection, PII sanitizer, data poisoning, adversarial tester
+- Monitoring (4): Metrics, health, dashboard
+- Utils (4): Retry, circuit breaker, error classifier
 
 ---
 
