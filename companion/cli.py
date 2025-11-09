@@ -291,18 +291,22 @@ def write() -> None:
 
         pii_matches = detect_pii(content)
         if pii_matches and len(pii_matches) > 0:
-            console.print("\n[yellow]⚠️  Possible PII detected:[/yellow]")
+            console.print("\n[yellow]⚠️  Personal Information Detected:[/yellow]")
             for match in pii_matches[:3]:  # Show first 3
                 console.print(f"  • {match.pii_type}: confidence {match.confidence:.0%}")
 
-            console.print("\n[dim]Your journal is encrypted, but consider:")
-            console.print("  [1] Save as-is (recommended - your data is encrypted)")
-            console.print("  [2] Cancel and edit[/dim]\n")
+            console.print("\n[dim]Your journal will be encrypted, so this is safe to save.")
+            console.print("This warning is just for your awareness.[/dim]")
+            console.print("\n[dim]Options:")
+            console.print("  [1] Continue (save with encryption)")
+            console.print("  [2] Cancel (don't save this entry)[/dim]\n")
 
             choice = Prompt.ask("Choice", choices=["1", "2"], default="1")
             if choice == "2":
-                console.print("[yellow]Entry cancelled. Run 'companion write' to try again.[/yellow]")
+                console.print("[yellow]Entry not saved.[/yellow]")
                 return
+
+            console.print("[dim]Continuing...[/dim]")
 
             # Log PII detection (encrypted)
             _log_security_event_encrypted(
