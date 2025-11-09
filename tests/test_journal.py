@@ -27,7 +27,21 @@ def temp_data_dir(monkeypatch):
         yield temp_path
 
 
-def test_save_entry(temp_data_dir):
+@pytest.fixture
+def config_no_encryption(temp_data_dir, monkeypatch):
+    """Disable encryption and use test data directory."""
+    from companion.models import Config
+    
+    def mock_load_config():
+        config = Config(data_directory=temp_data_dir)
+        config.enable_encryption = False
+        return config
+    
+    monkeypatch.setattr("companion.journal.load_config", mock_load_config)
+    monkeypatch.setattr("companion.config.load_config", mock_load_config)
+
+
+def test_save_entry(temp_data_dir, config_no_encryption):
     """Test saving a journal entry."""
     entry = JournalEntry(
         content="Test entry content",
@@ -44,7 +58,7 @@ def test_save_entry(temp_data_dir):
     assert len(entry_files) == 1
 
 
-def test_save_and_retrieve_entry(temp_data_dir):
+def test_save_and_retrieve_entry(temp_data_dir, config_no_encryption):
     """Test saving and retrieving an entry."""
     entry = JournalEntry(
         content="Test content",
@@ -60,13 +74,13 @@ def test_save_and_retrieve_entry(temp_data_dir):
     assert retrieved.prompt_used == entry.prompt_used
 
 
-def test_get_entry_not_found(temp_data_dir):
+def test_get_entry_not_found(temp_data_dir, config_no_encryption):
     """Test retrieving non-existent entry."""
     result = journal.get_entry("nonexistent-id")
     assert result is None
 
 
-def test_get_recent_entries(temp_data_dir):
+def test_get_recent_entries(temp_data_dir, config_no_encryption):
     """Test getting recent entries."""
     entries = [
         JournalEntry(content=f"Entry {i}")
@@ -82,19 +96,19 @@ def test_get_recent_entries(temp_data_dir):
     assert all(isinstance(e, JournalEntry) for e in recent)
 
 
-def test_get_recent_entries_empty(temp_data_dir):
+def test_get_recent_entries_empty(temp_data_dir, config_no_encryption):
     """Test getting recent entries when none exist."""
     recent = journal.get_recent_entries()
     assert recent == []
 
 
-def test_get_recent_entries_negative_limit(temp_data_dir):
+def test_get_recent_entries_negative_limit(temp_data_dir, config_no_encryption):
     """Test that negative limit raises error."""
     with pytest.raises(ValueError, match="Limit must be non-negative"):
         journal.get_recent_entries(limit=-1)
 
 
-def test_get_entries_by_date_range(temp_data_dir):
+def test_get_entries_by_date_range(temp_data_dir, config_no_encryption):
     """Test getting entries by date range."""
     today = date.today()
     yesterday = today - timedelta(days=1)
@@ -124,7 +138,7 @@ def test_get_entries_by_date_range(temp_data_dir):
     assert any(e.content == "Today" for e in entries)
 
 
-def test_get_entries_by_date_range_invalid(temp_data_dir):
+def test_get_entries_by_date_range_invalid(temp_data_dir, config_no_encryption):
     """Test that invalid date range raises error."""
     today = date.today()
     yesterday = today - timedelta(days=1)
@@ -133,7 +147,7 @@ def test_get_entries_by_date_range_invalid(temp_data_dir):
         journal.get_entries_by_date_range(today, yesterday)
 
 
-def test_search_entries(temp_data_dir):
+def test_search_entries(temp_data_dir, config_no_encryption):
     """Test searching entries by content."""
     entry1 = JournalEntry(content="I went to the park today")
     entry2 = JournalEntry(content="Work was challenging")
@@ -149,13 +163,13 @@ def test_search_entries(temp_data_dir):
     assert all("park" in e.content.lower() for e in results)
 
 
-def test_search_entries_empty_query(temp_data_dir):
+def test_search_entries_empty_query(temp_data_dir, config_no_encryption):
     """Test that empty query raises error."""
     with pytest.raises(ValueError, match="Search query cannot be empty"):
         journal.search_entries("")
 
 
-def test_search_entries_case_insensitive(temp_data_dir):
+def test_search_entries_case_insensitive(temp_data_dir, config_no_encryption):
     """Test that search is case-insensitive."""
     entry = JournalEntry(content="HELLO World")
     journal.save_entry(entry)
@@ -167,7 +181,7 @@ def test_search_entries_case_insensitive(temp_data_dir):
     assert len(results) == 1
 
 
-def test_delete_entry(temp_data_dir):
+def test_delete_entry(temp_data_dir, config_no_encryption):
     """Test deleting an entry."""
     entry = JournalEntry(content="To be deleted")
     entry_id = journal.save_entry(entry)
@@ -179,7 +193,7 @@ def test_delete_entry(temp_data_dir):
     assert retrieved is None
 
 
-def test_delete_entry_not_found(temp_data_dir):
+def test_delete_entry_not_found(temp_data_dir, config_no_encryption):
     """Test deleting non-existent entry."""
     deleted = journal.delete_entry("nonexistent-id")
     assert deleted is False

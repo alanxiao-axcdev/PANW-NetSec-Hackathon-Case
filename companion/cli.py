@@ -20,6 +20,7 @@ from rich.panel import Panel
 from rich.prompt import Prompt
 
 from companion import analyzer, config, journal, prompter, summarizer
+from companion.passphrase_prompt import get_passphrase
 from companion.models import JournalEntry
 from companion.monitoring import dashboard, health
 from companion.security.audit import decrypt_audit_log, log_security_event, verify_audit_log_integrity
@@ -212,8 +213,20 @@ def write() -> None:
     """
     _display_greeting()
 
-    # Get recent entries for context
-    recent_entries = journal.get_recent_entries(limit=5)
+    # Get recent entries for context (skip if encrypted and no passphrase)
+    try:
+        cfg_obj = config.load_config()
+        passphrase_temp = None
+        if cfg_obj.enable_encryption:
+            # Try to get cached passphrase, don't prompt yet
+            from companion.session import get_session
+            session = get_session()
+            passphrase_temp = session.get_passphrase()
+        
+        recent_entries = journal.get_recent_entries(limit=5, passphrase=passphrase_temp)
+    except Exception:
+        # If can't load recent, just use empty list
+        recent_entries = []
 
     # Load idle threshold from config
     config_obj = config.load_config()
@@ -246,9 +259,19 @@ def write() -> None:
         duration_seconds=duration
     )
 
+    # Get passphrase if encryption enabled
+    cfg_obj = config.load_config()
+    passphrase = None
+    if cfg_obj.enable_encryption:
+        try:
+            passphrase = get_passphrase()
+        except KeyboardInterrupt:
+            console.print("\n[yellow]Cancelled.[/yellow]")
+            return
+
     # Save entry
     with console.status("[cyan]Saving entry..."):
-        journal.save_entry(entry)
+        journal.save_entry(entry, passphrase=passphrase)
 
     # Log entry creation
     log_security_event(
@@ -320,13 +343,23 @@ def list_entries(limit: int, date: str | None) -> None:
     Shows recent entries with timestamps, previews, and metadata.
     """
     try:
+        # Get passphrase if encryption enabled
+        cfg_obj = config.load_config()
+        passphrase = None
+        if cfg_obj.enable_encryption:
+            try:
+                passphrase = get_passphrase()
+            except KeyboardInterrupt:
+                console.print("\n[yellow]Cancelled.[/yellow]")
+                return
+        
         if date:
             # Parse date and get entries for that day
             target_date = datetime.strptime(date, "%Y-%m-%d").date()
-            entries = journal.get_entries_by_date_range(target_date, target_date)
+            entries = journal.get_entries_by_date_range(target_date, target_date, passphrase=passphrase)
         else:
             # Get recent entries
-            entries = journal.get_recent_entries(limit=limit)
+            entries = journal.get_recent_entries(limit=limit, passphrase=passphrase)
 
         if not entries:
             console.print("\n[yellow]No entries found.[/yellow]\n")
@@ -363,7 +396,17 @@ def show(entry_id: str) -> None:
     ENTRY_ID: Entry identifier (timestamp or UUID)
     """
     try:
-        entry = journal.get_entry(entry_id)
+        # Get passphrase if encryption enabled
+        cfg_obj = config.load_config()
+        passphrase = None
+        if cfg_obj.enable_encryption:
+            try:
+                passphrase = get_passphrase()
+            except KeyboardInterrupt:
+                console.print("\n[yellow]Cancelled.[/yellow]")
+                return
+        
+        entry = journal.get_entry(entry_id, passphrase=passphrase)
 
         # Format timestamp
         timestamp_str = entry.timestamp.strftime("%B %d, %Y at %I:%M %p")
@@ -412,7 +455,18 @@ def summary(period: str) -> None:
 
         # Get entries
         console.print(f"\n[cyan]Loading {period} entries...[/cyan]")
-        entries = journal.get_entries_by_date_range(start_date, end_date)
+        
+        # Get passphrase if encryption enabled
+        cfg_obj = config.load_config()
+        passphrase = None
+        if cfg_obj.enable_encryption:
+            try:
+                passphrase = get_passphrase()
+            except KeyboardInterrupt:
+                console.print("\n[yellow]Cancelled.[/yellow]")
+                return
+        
+        entries = journal.get_entries_by_date_range(start_date, end_date, passphrase=passphrase)
 
         if not entries:
             console.print(f"\n[yellow]No entries found for the past {period}.[/yellow]\n")
@@ -567,7 +621,10 @@ def metrics() -> None:
     Displays real-time metrics including latency, memory usage, and cache performance.
     """
     try:
-        dashboard.display_metrics_dashboard()
+        from companion.monitoring import metrics as metrics_module
+
+        metrics_data = metrics_module.get_all_metrics()
+        dashboard.display_metrics_dashboard(metrics_data)
     except Exception as e:
         logger.error("Failed to display metrics: %s", e)
         console.print(f"\n[red]Error displaying metrics: {e}[/red]\n")
