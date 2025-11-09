@@ -36,10 +36,25 @@ async def analyze_sentiment(text: str) -> Sentiment:
         msg = "Text cannot be empty"
         raise ValueError(msg)
 
-    # Sanitize PII before sending to AI (even though Qwen is local)
+    # Security checks before AI processing
     from companion.security.pii_detector import detect_pii
+    from companion.security_research.prompt_injection_detector import detect_injection
 
+    # 1. Check for prompt injection attempts
     sanitized_text = text
+    try:
+        injection_risk = detect_injection(text)
+        if injection_risk.level in ["MEDIUM", "HIGH"]:
+            logger.warning(
+                "Potential prompt injection detected (risk: %s) in analysis input. Patterns: %s",
+                injection_risk.level,
+                injection_risk.patterns_detected
+            )
+            # Continue but log for security monitoring
+    except Exception as e:
+        logger.debug("Prompt injection check failed (non-critical): %s", e)
+
+    # 2. Sanitize PII before sending to AI
     try:
         pii_matches = detect_pii(text)
         if pii_matches:
@@ -156,10 +171,25 @@ async def extract_themes(text: str) -> list[Theme]:
         msg = "Text cannot be empty"
         raise ValueError(msg)
 
-    # Sanitize PII before sending to AI (even though Qwen is local)
+    # Security checks before AI processing
     from companion.security.pii_detector import detect_pii
+    from companion.security_research.prompt_injection_detector import detect_injection
 
+    # 1. Check for prompt injection attempts
     sanitized_text = text
+    try:
+        injection_risk = detect_injection(text)
+        if injection_risk.level in ["MEDIUM", "HIGH"]:
+            logger.warning(
+                "Potential prompt injection detected (risk: %s) in analysis input. Patterns: %s",
+                injection_risk.level,
+                injection_risk.patterns_detected
+            )
+            # Continue but log for security monitoring
+    except Exception as e:
+        logger.debug("Prompt injection check failed (non-critical): %s", e)
+
+    # 2. Sanitize PII before sending to AI
     try:
         pii_matches = detect_pii(text)
         if pii_matches:
