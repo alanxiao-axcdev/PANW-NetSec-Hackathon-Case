@@ -22,7 +22,7 @@ from rich.prompt import Prompt
 from companion import analyzer, config, journal, prompter, summarizer
 from companion.models import JournalEntry
 from companion.monitoring import dashboard, health
-from companion.security.audit import decrypt_audit_log, verify_audit_log_integrity
+from companion.security.audit import decrypt_audit_log, log_security_event, verify_audit_log_integrity
 from companion.security.passphrase import (
     PassphraseStrength,
     check_passphrase_strength,
@@ -250,6 +250,13 @@ def write() -> None:
     with console.status("[cyan]Saving entry..."):
         journal.save_entry(entry)
 
+    # Log entry creation
+    log_security_event(
+        "entry_created",
+        {"entry_id": entry.id, "content_length": len(entry.content)},
+        severity="info"
+    )
+
     # Show duration in minutes
     duration_min = max(1, duration // 60)
     console.print(f"\n✓ Entry saved ({duration_min} min)", style="green")
@@ -275,6 +282,17 @@ def write() -> None:
             entry.sentiment = sentiment
             entry.themes = [theme.name for theme in themes[:5]]
             journal.save_entry(entry)
+
+            # Log analysis completion
+            log_security_event(
+                "analysis_complete",
+                {
+                    "entry_id": entry.id,
+                    "sentiment": sentiment.label,
+                    "theme_count": len(entry.themes)
+                },
+                severity="info"
+            )
 
             # Format themes
             themes_str = ", ".join(entry.themes) if entry.themes else "None detected"
