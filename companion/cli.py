@@ -465,6 +465,47 @@ def summary(period: str) -> None:
 
 
 @main.command()
+@click.option('--period', type=click.Choice(['week', 'month', 'all']), default='week',
+              help='Time period to analyze')
+@click.option('--start', type=str, help='Start date (YYYY-MM-DD)')
+@click.option('--end', type=str, help='End date (YYYY-MM-DD)')
+def trends(period: str, start: str | None, end: str | None) -> None:
+    """Show visual emotional trends and patterns.
+
+    Displays:
+    - Emotional delta (trending improving/declining)
+    - Top themes frequency
+    - Sentiment distribution
+    """
+    from companion.trends import show_trends
+
+    # Parse custom dates if provided
+    start_date = None
+    end_date = None
+
+    if start:
+        try:
+            start_date = datetime.strptime(start, '%Y-%m-%d').date()
+        except ValueError:
+            console.print("[red]Invalid start date. Use YYYY-MM-DD format.[/red]")
+            sys.exit(1)
+
+    if end:
+        try:
+            end_date = datetime.strptime(end, '%Y-%m-%d').date()
+        except ValueError:
+            console.print("[red]Invalid end date. Use YYYY-MM-DD format.[/red]")
+            sys.exit(1)
+
+    # Validate date range if both provided
+    if start_date and end_date and start_date > end_date:
+        console.print("[red]Start date must be before end date.[/red]")
+        sys.exit(1)
+
+    show_trends(period=period, start_date=start_date, end_date=end_date)
+
+
+@main.command()
 def health_check() -> None:
     """Show system health status.
 
