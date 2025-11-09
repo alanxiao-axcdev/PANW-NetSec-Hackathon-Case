@@ -867,7 +867,19 @@ def rotate_keys_cmd() -> None:
         )
         save_rotation_metadata(new_metadata, cfg.data_directory)
 
+        # Update stored passphrase hash to match new passphrase
+        from companion.security.passphrase import generate_passphrase_hash
+        new_hash = generate_passphrase_hash(new_pass)
+        cfg.passphrase_hash = new_hash
+        config.save_config(cfg)
+
+        # Update session cache to use new passphrase
+        from companion.session import get_session
+        session = get_session()
+        session.set_passphrase(new_pass)
+
         console.print(f"\n[dim]Next rotation due: {next_due.strftime('%Y-%m-%d')} (90 days)[/dim]")
+        console.print("[dim]Passphrase hash updated in config[/dim]")
     else:
         console.print("[red]❌ Rotation failed[/red]")
         console.print(f"  Entries rotated: {result.entries_rotated}")
