@@ -31,10 +31,19 @@ python -m pytest -v | tail -5
 
 **Interactive Writing Experience:**
 - Start with a blank slate (no upfront prompts)
-- After 15 seconds of idle time, contextual AI prompts appear as subtle gray text
+- Contextual AI prompts appear as subtle gray text
 - **Ctrl+D** to save your entry
 - **Ctrl+C** to cancel
 - Nano-like editor UX for a natural writing flow
+
+**Visualize Your Patterns:**
+```bash
+# See emotional trends and recurring themes
+python -m companion.cli trends
+```
+- Emotional delta (trending more positive/negative)
+- Top themes frequency chart
+- Sentiment distribution breakdown
 
 **That's it!** Works immediately with intelligent mock AI (no 3GB model download needed for demo).
 

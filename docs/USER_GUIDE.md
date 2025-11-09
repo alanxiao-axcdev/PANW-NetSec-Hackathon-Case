@@ -312,6 +312,55 @@ Monthly Reflection (January 2025)
 [Detailed monthly analysis with trends, growth areas, and insights]
 ```
 
+### Visual Trends Dashboard
+
+See your emotional patterns at a glance with the trends visualization:
+
+```bash
+$ companion trends
+
+Emotional Trends (Jan 1-7, 2025)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Emotional Journey
+  Start of period:  0.45 (Neutral-leaning)
+  End of period:    0.72 (Positive)
+
+  Trend: ↗ Improving (+27%)
+
+Top Themes
+  work          ████████████████░░ (12 entries)
+  health        ████████████░░░░░░ (9 entries)
+  relationships ████████░░░░░░░░░░ (6 entries)
+  stress        ██████░░░░░░░░░░░░ (4 entries)
+  creativity    ████░░░░░░░░░░░░░░ (3 entries)
+
+Emotional Distribution
+  Positive  60% ████████████
+  Neutral   30% ██████
+  Negative  10% ██
+
+7 entries analyzed
+```
+
+**Options:**
+```bash
+companion trends                    # Last week (default)
+companion trends --period month     # Last 30 days
+companion trends --period all       # All entries
+companion trends --start 2025-01-01 --end 2025-01-31  # Custom range
+```
+
+**What the dashboard shows:**
+- **Emotional Delta**: Whether you're trending more positive or negative
+- **Top Themes**: What you write about most frequently
+- **Sentiment Distribution**: Overall emotional breakdown
+
+**Quick Insights:**
+- Improving trend (↗) with +percentage means you're getting happier
+- Top themes reveal what matters most in your life right now
+- Distribution shows overall emotional balance
+
 ---
 
 ## Security Features

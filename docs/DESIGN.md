@@ -69,9 +69,9 @@ Companion is architected as a **modular, security-first AI application** demonst
 
 ## Module Organization
 
-Companion consists of **27 modules** organized into **7 domains**:
+Companion consists of **28 modules** organized into **7 domains**:
 
-### Domain 1: Core (10 modules)
+### Domain 1: Core (11 modules)
 
 Foundation functionality for journaling application.
 
@@ -131,12 +131,20 @@ Foundation functionality for journaling application.
 
 **Module: cli.py - Interactive Editor**
 - **Purpose**: Professional terminal editor with idle-time prompts
-- **Features**: Blank slate start, idle detection, contextual AI prompts, duration tracking
-- **Implementation**: `_run_interactive_editor()` function (~100 lines inline in cli.py)
+- **Features**: Blank slate start, contextual AI prompts, duration tracking
+- **Implementation**: `_run_interactive_editor()` function (~75 lines inline in cli.py)
 - **Keyboard shortcuts**: Ctrl+D (save), Ctrl+C (cancel)
 - **Dependencies**: `prompter`, prompt_toolkit
 
-**Total Core**: ~1,840 lines
+**Module: trends.py**
+- **Purpose**: Visual emotional trends dashboard
+- **Exports**: `show_trends(period, start_date, end_date)`
+- **Features**: Emotional delta calculation, theme frequency charts, sentiment distribution
+- **Visualization**: Rich library (Panel, Table, text-based bars)
+- **Dependencies**: `journal`, `models`, Rich
+- **Lines**: ~120
+
+**Total Core**: ~1,960 lines
 
 ---
 
