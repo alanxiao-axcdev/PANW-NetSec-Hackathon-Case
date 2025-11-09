@@ -268,7 +268,7 @@ def verify_passphrase(passphrase: str, encrypted_file: Path) -> bool:
 
     Args:
         passphrase: Passphrase to verify
-        encrypted_file: Sample encrypted file to test
+        encrypted_file: Sample encrypted file to test (JSON format)
 
     Returns:
         True if passphrase works, False otherwise
@@ -276,17 +276,22 @@ def verify_passphrase(passphrase: str, encrypted_file: Path) -> bool:
     Example:
         >>> from pathlib import Path
         >>> # Create test file
-        >>> test_file = Path("test.enc")
-        >>> test_file.write_bytes(encrypt_entry("test", "pass123"))
+        >>> test_file = Path("test.json")
+        >>> entry_dict = {"id": "test", "content": "test"}
+        >>> encrypted = encrypt_full_entry_to_dict(entry_dict, "pass123")
+        >>> import json
+        >>> test_file.write_text(json.dumps(encrypted))
         >>> verify_passphrase("pass123", test_file)
         True
         >>> verify_passphrase("wrong", test_file)
         False
     """
     try:
-        with open(encrypted_file, "rb") as f:
-            encrypted = f.read()
-        decrypt_entry(encrypted, passphrase)
+        import json
+        with open(encrypted_file) as f:
+            data = json.load(f)
+        # Try to decrypt - if passphrase is wrong, this will raise exception
+        decrypt_full_entry_from_dict(data, passphrase)
         return True
     except Exception:
         return False
@@ -359,20 +364,20 @@ def rotate_keys(
     # Rotate each entry
     for entry_file in entry_files:
         try:
-            # Read encrypted data
-            with open(entry_file, "rb") as f:
-                old_encrypted = f.read()
+            # Read encrypted JSON data
+            with open(entry_file) as f:
+                old_encrypted_dict = json.load(f)
 
-            # Decrypt with old passphrase
-            decrypted = decrypt_entry(old_encrypted, old_passphrase)
+            # Decrypt with old passphrase (returns complete entry dict)
+            decrypted_dict = decrypt_full_entry_from_dict(old_encrypted_dict, old_passphrase)
 
             # Re-encrypt with new passphrase
-            new_encrypted = encrypt_entry(decrypted, new_passphrase)
+            new_encrypted_dict = encrypt_full_entry_to_dict(decrypted_dict, new_passphrase)
 
             # Atomic replace
             temp_file = entry_file.with_suffix(".tmp")
-            with open(temp_file, "wb") as f:
-                f.write(new_encrypted)
+            with open(temp_file, "w") as f:
+                json.dump(new_encrypted_dict, f, indent=2)
             temp_file.replace(entry_file)
 
             rotated += 1
