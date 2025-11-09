@@ -15,6 +15,8 @@ from companion.security.passphrase import (
     PassphraseStrength,
     check_passphrase_strength,
     is_passphrase_acceptable,
+    generate_passphrase_hash,
+    verify_passphrase_hash,
 )
 from companion.session import get_session
 
@@ -112,6 +114,16 @@ def setup_first_passphrase() -> str:
         console.print("[yellow]Please start over.[/yellow]\n")
         return setup_first_passphrase()
 
+    # Generate and store passphrase hash
+    from companion.security.passphrase import generate_passphrase_hash
+    passphrase_hash = generate_passphrase_hash(passphrase)
+
+    # Save hash to config
+    cfg = load_config()
+    cfg.passphrase_hash = passphrase_hash
+    from companion.config import save_config
+    save_config(cfg)
+
     # Mark as set and cache in session
     mark_passphrase_set()
     session = get_session()
@@ -125,7 +137,7 @@ def setup_first_passphrase() -> str:
 def get_passphrase(prompt_text: str = "Enter passphrase") -> str:
     """Get passphrase from user, using cache if available.
 
-    Handles first-time setup if needed.
+    Handles first-time setup if needed and verifies passphrase on subsequent use.
 
     Args:
         prompt_text: Custom prompt text (default: "Enter passphrase")
@@ -135,6 +147,7 @@ def get_passphrase(prompt_text: str = "Enter passphrase") -> str:
 
     Raises:
         KeyboardInterrupt: If user cancels
+        ValueError: If max attempts exceeded
     """
     session = get_session()
 
@@ -149,10 +162,38 @@ def get_passphrase(prompt_text: str = "Enter passphrase") -> str:
     if not is_passphrase_set():
         return setup_first_passphrase()
 
-    # Prompt for passphrase
-    passphrase = Prompt.ask(prompt_text, password=True)
+    # Load config to get stored hash
+    cfg = load_config()
 
-    # Cache for session
-    session.set_passphrase(passphrase)
+    # If no hash stored (legacy install), do first-time setup
+    if not cfg.passphrase_hash:
+        console.print("\n[yellow]⚠️  Passphrase verification not configured.[/yellow]")
+        console.print("[dim]Setting up passphrase verification for security...[/dim]\n")
+        return setup_first_passphrase()
 
-    return passphrase
+    # Prompt for passphrase with verification
+    max_attempts = 3
+    for attempt in range(1, max_attempts + 1):
+        passphrase = Prompt.ask(prompt_text, password=True)
+
+        # Verify passphrase
+        from companion.security.passphrase import verify_passphrase_hash
+        if verify_passphrase_hash(passphrase, cfg.passphrase_hash):
+            # Success - cache for session
+            session.set_passphrase(passphrase)
+            logger.debug("Passphrase verified successfully")
+            return passphrase
+
+        # Failed verification
+        if attempt < max_attempts:
+            console.print(f"\n[red]❌ Incorrect passphrase ({attempt}/{max_attempts} attempts)[/red]")
+            console.print("[dim]Try again...[/dim]\n")
+        else:
+            console.print(f"\n[red]❌ Incorrect passphrase ({max_attempts}/{max_attempts} attempts)[/red]")
+            console.print("[red]Maximum attempts exceeded.[/red]\n")
+            raise ValueError("Maximum passphrase attempts exceeded")
+
+    # Should never reach here but defensive
+    raise ValueError("Passphrase verification failed")
+
+

@@ -122,6 +122,7 @@ class Config(BaseModel):
         enable_pii_detection: Whether to detect PII
         enable_audit_logging: Whether to log security events
         editor_idle_threshold: Seconds of idle time before showing prompt in editor
+        passphrase_hash: PBKDF2 hash of passphrase for verification (base64 encoded: salt||hash)
     """
 
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -135,6 +136,7 @@ class Config(BaseModel):
     enable_pii_detection: bool = True
     enable_audit_logging: bool = True
     editor_idle_threshold: int = 15
+    passphrase_hash: str | None = None  # PBKDF2 hash for passphrase verification
 
 
 # Security-related models

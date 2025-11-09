@@ -656,3 +656,111 @@ class BruteForceProtector:
         attempts = self._load_attempts()
         cutoff = datetime.now(UTC) - timedelta(hours=hours)
         return [a for a in attempts if a.timestamp >= cutoff]
+
+
+def generate_passphrase_hash(passphrase: str) -> str:
+    """Generate PBKDF2 hash of passphrase for verification.
+
+    Uses same algorithm as encryption key derivation (PBKDF2-HMAC-SHA256)
+    but stores the result for later verification without needing to decrypt data.
+
+    Args:
+        passphrase: Passphrase to hash
+
+    Returns:
+        Base64-encoded string containing salt||hash (48 bytes total)
+
+    Example:
+        >>> hash_str = generate_passphrase_hash("my secure passphrase")
+        >>> len(hash_str) > 0
+        True
+        >>> verify_passphrase_hash("my secure passphrase", hash_str)
+        True
+        >>> verify_passphrase_hash("wrong passphrase", hash_str)
+        False
+    """
+    import base64
+    import os
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+    from cryptography.hazmat.backends import default_backend
+
+    if not passphrase:
+        msg = "Passphrase cannot be empty"
+        raise ValueError(msg)
+
+    # Generate random salt (16 bytes)
+    salt = os.urandom(16)
+
+    # Derive hash using same parameters as encryption
+    kdf = PBKDF2HMAC(
+        algorithm=hashes.SHA256(),
+        length=32,  # 32 bytes for AES-256
+        salt=salt,
+        iterations=600_000,  # OWASP recommendation
+        backend=default_backend(),
+    )
+
+    hash_bytes = kdf.derive(passphrase.encode("utf-8"))
+
+    # Combine salt and hash, then base64 encode
+    combined = salt + hash_bytes
+    return base64.b64encode(combined).decode("ascii")
+
+
+def verify_passphrase_hash(passphrase: str, stored_hash: str) -> bool:
+    """Verify passphrase against stored hash.
+
+    Args:
+        passphrase: Passphrase to verify
+        stored_hash: Base64-encoded salt||hash from generate_passphrase_hash()
+
+    Returns:
+        True if passphrase matches, False otherwise
+
+    Example:
+        >>> hash_str = generate_passphrase_hash("correct passphrase")
+        >>> verify_passphrase_hash("correct passphrase", hash_str)
+        True
+        >>> verify_passphrase_hash("wrong passphrase", hash_str)
+        False
+    """
+    import base64
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+    from cryptography.hazmat.backends import default_backend
+
+    if not passphrase or not stored_hash:
+        return False
+
+    try:
+        # Decode stored hash
+        combined = base64.b64decode(stored_hash)
+
+        # Extract salt (first 16 bytes) and hash (remaining 32 bytes)
+        if len(combined) != 48:
+            logger.error("Invalid hash format: expected 48 bytes, got %d", len(combined))
+            return False
+
+        salt = combined[:16]
+        expected_hash = combined[16:]
+
+        # Derive hash from provided passphrase
+        kdf = PBKDF2HMAC(
+            algorithm=hashes.SHA256(),
+            length=32,
+            salt=salt,
+            iterations=600_000,
+            backend=default_backend(),
+        )
+
+        computed_hash = kdf.derive(passphrase.encode("utf-8"))
+
+        # Constant-time comparison to prevent timing attacks
+        import hmac
+        return hmac.compare_digest(computed_hash, expected_hash)
+
+    except Exception as e:
+        logger.error("Passphrase verification failed: %s", e)
+        return False
+
