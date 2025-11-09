@@ -2,7 +2,7 @@
 
 **Production-Ready AI Security Demonstration**
 
-[![Tests](https://img.shields.io/badge/tests-413%20passing-success)]() [![Coverage](https://img.shields.io/badge/coverage-76%25-success)]() [![Security](https://img.shields.io/badge/security-6%20layers-blue)]() [![Commits](https://img.shields.io/badge/commits-27%20clean-blue)]()
+[![Tests](https://img.shields.io/badge/tests-413%20passing-success)]() [![Coverage](https://img.shields.io/badge/coverage-76%25-success)]() [![Security](https://img.shields.io/badge/security-6%20layers-blue)]() [![Commits](https://img.shields.io/badge/commits-71%20total-blue)]()
 
 ---
 
@@ -30,9 +30,9 @@ python -m pytest -v | tail -5
 **Interactive Writing Experience:**
 - Start with a blank slate (no upfront prompts)
 - Contextual AI prompts appear as subtle gray text
-- Ctrl+D to save your entry
+- Meta+Enter or Esc+Enter to save your entry
 - Ctrl+C to cancel
-- Nano-like editor UX for a natural writing flow
+- Natural terminal editor UX
 
 **Visualize Your Patterns:**
 ```bash
@@ -81,7 +81,7 @@ The system works immediately with intelligent mock AI (no 3GB model download nee
 
 - 413 tests passing (100%)
 - 76% coverage
-- 27 commits (clean history)
+- 71 commits total
 - 38 modules implemented
 - ~6,500 lines code
 - ~9,431 lines documentation
