@@ -1,6 +1,6 @@
 # Companion - AI Security Infrastructure
 
-**Production-Ready AI Security Demonstration**
+**Production-Ready AI Security Demonstration** [youtube](https://youtu.be/SMf7vAfeAGY)
 
 [![Tests](https://img.shields.io/badge/tests-413%20passing-success)]() [![Coverage](https://img.shields.io/badge/coverage-76%25-success)]() [![Security](https://img.shields.io/badge/security-6%20layers-blue)]()
 
